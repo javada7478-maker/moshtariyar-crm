@@ -3,27 +3,27 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مشتریار | مدیریت فروشگاه</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مشتریار</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:18px;background:#f3f5f9;color:#202b3c;font-family:Tahoma,Arial,sans-serif}
+body{margin:0;padding:15px;background:#f3f5f9;color:#202b3c;font-family:Tahoma,Arial,sans-serif}
 .container{max-width:950px;margin:auto}
 header{background:linear-gradient(135deg,#172554,#2563eb);color:white;padding:25px;border-radius:18px;margin-bottom:18px}
-header h1{margin:0 0 8px;font-size:27px}
+header h1{margin:0 0 8px}
 header p{margin:0;color:#dbeafe}
 h2{font-size:19px;margin:0 0 15px}
 .panel{background:white;padding:18px;border-radius:15px;margin-bottom:17px;box-shadow:0 3px 12px #00000009}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:17px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:17px}
 .stat{background:white;padding:17px;border-radius:14px;border:1px solid #e8edf5}
 .stat small{color:#64748b}
-.stat strong{display:block;font-size:21px;margin-top:10px;color:#1d4ed8}
+.stat strong{display:block;font-size:19px;margin-top:10px;color:#1d4ed8}
 input,select{width:100%;padding:12px;border:1px solid #d7deea;border-radius:9px;margin:6px 0 12px;font-family:inherit;font-size:14px}
 button{border:0;border-radius:9px;padding:11px 15px;margin:3px;font-family:inherit;cursor:pointer;background:#2563eb;color:white}
-button.danger{background:#dc2626}
-button.gray{background:#64748b}
-button.green{background:#059669}
-button.orange{background:#d97706}
+.danger{background:#dc2626}
+.gray{background:#64748b}
+.green{background:#059669}
+.orange{background:#d97706}
 .item{border:1px solid #e5eaf2;padding:13px;border-radius:11px;margin:9px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .muted{color:#64748b;font-size:12px}
 .status{font-size:12px;padding:5px 9px;border-radius:20px;background:#eff6ff;color:#1d4ed8}
@@ -31,21 +31,23 @@ button.orange{background:#d97706}
 .bar-bg{height:13px;background:#e8edf5;border-radius:20px;overflow:hidden}
 .bar{height:100%;background:#2563eb;border-radius:20px}
 .empty{color:#94a3b8;text-align:center;padding:15px}
-@media(max-width:500px){body{padding:10px}.item{align-items:flex-start}.item button{padding:9px}}
+.profit{color:#059669!important}
+.loss{color:#dc2626!important}
+@media(max-width:500px){body{padding:10px}}
 </style>
 </head>
 <body>
 <div class="container">
 <header>
 <h1>مشتریار</h1>
-<p>سیستم مدیریت مشتریان، سفارش‌ها و فروش</p>
+<p>مدیریت مشتریان، سفارش‌ها، فروش و حسابداری فروشگاه</p>
 </header>
 
 <div class="stats">
 <div class="stat"><small>تعداد مشتریان</small><strong id="customerCount">۰</strong></div>
 <div class="stat"><small>مجموع فروش</small><strong id="totalSales">۰</strong></div>
-<div class="stat"><small>سفارش‌های تکمیل‌شده</small><strong id="completedCount">۰</strong></div>
-<div class="stat"><small>سفارش‌های در انتظار</small><strong id="pendingCount">۰</strong></div>
+<div class="stat"><small>مجموع هزینه‌ها</small><strong id="totalExpenses">۰</strong></div>
+<div class="stat"><small>سود خالص</small><strong id="netProfit">۰</strong></div>
 </div>
 
 <section class="panel">
@@ -53,14 +55,15 @@ button.orange{background:#d97706}
 <div class="stats">
 <div class="stat"><small>فروش امروز</small><strong id="dailySales">۰</strong></div>
 <div class="stat"><small>فروش این ماه</small><strong id="monthlySales">۰</strong></div>
+<div class="stat"><small>سفارش تکمیل‌شده</small><strong id="completedCount">۰</strong></div>
+<div class="stat"><small>سفارش در انتظار</small><strong id="pendingCount">۰</strong></div>
 </div>
-<p class="muted">گزارش روزانه و ماهانه برای فروش‌هایی محاسبه می‌شود که از این نسخه به بعد تاریخ دقیق دارند.</p>
-<h2 style="margin-top:22px">نمودار فروش ۶ ماه اخیر</h2>
+<h2>نمودار فروش ۶ ماه اخیر</h2>
 <div id="chart"></div>
 </section>
 
 <section class="panel">
-<h2>افزودن مشتری</h2>
+<h2>ثبت مشتری</h2>
 <input id="customerName" placeholder="نام مشتری">
 <input id="customerPhone" placeholder="شماره تلفن">
 <button onclick="addCustomer()">ثبت مشتری</button>
@@ -75,14 +78,14 @@ button.orange{background:#d97706}
 <section class="panel">
 <h2>ثبت فروش مستقیم</h2>
 <input id="saleName" placeholder="نام مشتری">
-<input id="saleAmount" type="number" min="0" placeholder="مبلغ فروش به تومان">
+<input id="saleAmount" type="number" min="1" placeholder="مبلغ فروش به تومان">
 <button class="green" onclick="addSale()">ثبت فروش</button>
 </section>
 
 <section class="panel">
 <h2>ثبت سفارش جدید</h2>
 <select id="orderCustomer"></select>
-<input id="orderAmount" type="number" min="0" placeholder="مبلغ سفارش به تومان">
+<input id="orderAmount" type="number" min="1" placeholder="مبلغ سفارش به تومان">
 <button onclick="addOrder()">ثبت سفارش</button>
 </section>
 
@@ -90,43 +93,69 @@ button.orange{background:#d97706}
 <h2>فهرست سفارش‌ها</h2>
 <div id="ordersList"></div>
 </section>
+
+<section class="panel">
+<h2>ثبت هزینه جدید</h2>
+<input id="expenseTitle" placeholder="عنوان هزینه؛ مثل اجاره یا خرید کالا">
+<input id="expenseAmount" type="number" min="1" placeholder="مبلغ هزینه به تومان">
+<button class="orange" onclick="addExpense()">ثبت هزینه</button>
+</section>
+
+<section class="panel">
+<h2>فهرست هزینه‌ها</h2>
+<div id="expensesList"></div>
+</section>
+
+<section class="panel">
+<h2>گزارش حسابداری</h2>
+<div class="stats">
+<div class="stat"><small>کل فروش تکمیل‌شده</small><strong id="accountSales">۰</strong></div>
+<div class="stat"><small>کل هزینه‌ها</small><strong id="accountExpenses">۰</strong></div>
+<div class="stat"><small>سود یا زیان خالص</small><strong id="accountProfit">۰</strong></div>
+</div>
+<p class="muted">سود خالص در این نسخه برابر است با فروش‌های ثبت‌شده منهای هزینه‌های ثبت‌شده. هزینه خرید کالا و سایر هزینه‌ها را باید دستی وارد کنی.</p>
+</section>
 </div>
 
 <script>
-const readData=(key)=>{try{return JSON.parse(localStorage.getItem(key))||[]}catch(e){return []}};
+const readData=key=>{try{return JSON.parse(localStorage.getItem(key))||[]}catch(e){return []}};
 let customers=readData("crmCustomers");
 let sales=readData("crmSales");
 let orders=readData("crmOrders");
+let expenses=readData("crmExpenses");
 
 function save(){
 localStorage.setItem("crmCustomers",JSON.stringify(customers));
 localStorage.setItem("crmSales",JSON.stringify(sales));
 localStorage.setItem("crmOrders",JSON.stringify(orders));
+localStorage.setItem("crmExpenses",JSON.stringify(expenses));
 }
 function money(n){return Number(n||0).toLocaleString("fa-IR")+" تومان"}
 function todayISO(){return new Date().toISOString().slice(0,10)}
-function escapeHTML(value){
-return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
 function completedSales(){
-return sales.reduce((sum,s)=>sum+Number(s.amount||0),0)+
-orders.filter(o=>o.status==="تکمیل شده").reduce((sum,o)=>sum+Number(o.amount||0),0);
+return sales.reduce((a,s)=>a+Number(s.amount||0),0)+
+orders.filter(o=>o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
 }
+function totalExpense(){return expenses.reduce((a,e)=>a+Number(e.amount||0),0)}
+
 function addCustomer(){
 const name=document.getElementById("customerName").value.trim();
 const phone=document.getElementById("customerPhone").value.trim();
-if(!name||!phone){alert("نام و شماره تلفن را وارد کن");return}
+if(!name||!phone){alert("نام و شماره را وارد کن");return}
 customers.push({id:Date.now(),name,phone});
-save();document.getElementById("customerName").value="";
+save();
+document.getElementById("customerName").value="";
 document.getElementById("customerPhone").value="";
 render();
 }
 function editCustomer(id){
 const c=customers.find(x=>x.id===id);
 if(!c)return;
-const name=prompt("نام جدید مشتری:",c.name);
+const name=prompt("نام جدید:",c.name);
 if(name===null||!name.trim())return;
-const phone=prompt("شماره تلفن جدید:",c.phone);
+const phone=prompt("شماره جدید:",c.phone);
 if(phone===null)return;
 c.name=name.trim();c.phone=phone.trim();
 save();render();
@@ -141,7 +170,7 @@ const q=document.getElementById("search").value.trim().toLowerCase();
 const list=customers.filter(c=>(c.name+" "+c.phone).toLowerCase().includes(q));
 document.getElementById("customersList").innerHTML=list.length?list.map(c=>`
 <div class="item">
-<div><strong>${escapeHTML(c.name)}</strong><div class="muted">${escapeHTML(c.phone)}</div></div>
+<div><strong>${esc(c.name)}</strong><div class="muted">${esc(c.phone)}</div></div>
 <div><button class="gray" onclick="editCustomer(${Number(c.id)})">ویرایش</button>
 <button class="danger" onclick="deleteCustomer(${Number(c.id)})">حذف</button></div>
 </div>`).join(""):'<div class="empty">مشتری‌ای پیدا نشد</div>';
@@ -149,30 +178,23 @@ document.getElementById("customersList").innerHTML=list.length?list.map(c=>`
 function addSale(){
 const name=document.getElementById("saleName").value.trim();
 const amount=Number(document.getElementById("saleAmount").value);
-if(!name||!amount||amount<0){alert("نام و مبلغ معتبر وارد کن");return}
+if(!name||!amount||amount<=0){alert("نام و مبلغ معتبر وارد کن");return}
 sales.push({name,amount,dateISO:todayISO()});
 save();
 document.getElementById("saleName").value="";
 document.getElementById("saleAmount").value="";
-render();
-alert("فروش ثبت شد");
+render();alert("فروش ثبت شد");
 }
 function addOrder(){
 const id=Number(document.getElementById("orderCustomer").value);
 const c=customers.find(x=>Number(x.id)===id);
 const amount=Number(document.getElementById("orderAmount").value);
-if(!c){alert("ابتدا یک مشتری انتخاب کن");return}
-if(!amount||amount<0){alert("مبلغ معتبر وارد کن");return}
-orders.push({
-id:Date.now(),customerId:c.id,name:c.name,amount,
-status:"در انتظار",
-date:new Date().toLocaleDateString("fa-IR"),
-dateISO:todayISO()
-});
+if(!c){alert("ابتدا مشتری انتخاب کن");return}
+if(!amount||amount<=0){alert("مبلغ معتبر وارد کن");return}
+orders.push({id:Date.now(),customerId:c.id,name:c.name,amount,status:"در انتظار",date:new Date().toLocaleDateString("fa-IR"),dateISO:todayISO()});
 save();
 document.getElementById("orderAmount").value="";
-render();
-alert("سفارش ثبت شد");
+render();alert("سفارش ثبت شد");
 }
 function changeStatus(id){
 const o=orders.find(x=>x.id===id);
@@ -182,63 +204,80 @@ o.status=statuses[(statuses.indexOf(o.status)+1)%statuses.length];
 save();render();
 }
 function deleteOrder(id){
-if(!confirm("این سفارش حذف شود؟"))return;
+if(!confirm("سفارش حذف شود؟"))return;
 orders=orders.filter(o=>o.id!==id);
 save();render();
 }
-function renderOrders(){
-const el=document.getElementById("ordersList");
-el.innerHTML=orders.length?orders.map(o=>`
+function addExpense(){
+const title=document.getElementById("expenseTitle").value.trim();
+const amount=Number(document.getElementById("expenseAmount").value);
+if(!title||!amount||amount<=0){alert("عنوان و مبلغ معتبر وارد کن");return}
+expenses.push({id:Date.now(),title,amount,dateISO:todayISO(),date:new Date().toLocaleDateString("fa-IR")});
+save();
+document.getElementById("expenseTitle").value="";
+document.getElementById("expenseAmount").value="";
+render();alert("هزینه ثبت شد");
+}
+function deleteExpense(id){
+if(!confirm("این هزینه حذف شود؟"))return;
+expenses=expenses.filter(e=>e.id!==id);
+save();render();
+}
+function renderExpenses(){
+const el=document.getElementById("expensesList");
+el.innerHTML=expenses.length?expenses.map(e=>`
 <div class="item">
-<div><strong>${escapeHTML(o.name)}</strong>
-<div>${money(o.amount)}</div>
-<div class="muted">${escapeHTML(o.date||"")}</div>
-<span class="status">${escapeHTML(o.status)}</span></div>
+<div><strong>${esc(e.title)}</strong><div>${money(e.amount)}</div><div class="muted">${esc(e.date)}</div></div>
+<button class="danger" onclick="deleteExpense(${Number(e.id)})">حذف</button>
+</div>`).join(""):'<div class="empty">هنوز هزینه‌ای ثبت نشده است</div>';
+}
+function renderSelect(){
+document.getElementById("orderCustomer").innerHTML=customers.length?
+customers.map(c=>`<option value="${Number(c.id)}">${esc(c.name)}</option>`).join(""):'<option value="">ابتدا مشتری ثبت کن</option>';
+}
+function renderOrders(){
+document.getElementById("ordersList").innerHTML=orders.length?orders.map(o=>`
+<div class="item">
+<div><strong>${esc(o.name)}</strong><div>${money(o.amount)}</div>
+<div class="muted">${esc(o.date||"")}</div><span class="status">${esc(o.status)}</span></div>
 <div><button class="orange" onclick="changeStatus(${Number(o.id)})">تغییر وضعیت</button>
 <button class="danger" onclick="deleteOrder(${Number(o.id)})">حذف</button></div>
 </div>`).join(""):'<div class="empty">هنوز سفارشی ثبت نشده است</div>';
 }
-function renderSelect(){
-const el=document.getElementById("orderCustomer");
-el.innerHTML=customers.length?customers.map(c=>`<option value="${Number(c.id)}">${escapeHTML(c.name)}</option>`).join(""):'<option value="">ابتدا مشتری ثبت کن</option>';
-}
 function renderReports(){
-const today=todayISO();
-const month=today.slice(0,7);
-const datedSales=sales.filter(s=>s.dateISO);
-const datedOrders=orders.filter(o=>o.dateISO);
-const daily=datedSales.filter(s=>s.dateISO===today).reduce((a,s)=>a+Number(s.amount||0),0)+
-datedOrders.filter(o=>o.dateISO===today&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
-const monthly=datedSales.filter(s=>s.dateISO.startsWith(month)).reduce((a,s)=>a+Number(s.amount||0),0)+
-datedOrders.filter(o=>o.dateISO.startsWith(month)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
+const today=todayISO(),month=today.slice(0,7);
+const ds=sales.filter(s=>s.dateISO);
+const os=orders.filter(o=>o.dateISO);
+const daily=ds.filter(s=>s.dateISO===today).reduce((a,s)=>a+Number(s.amount||0),0)+os.filter(o=>o.dateISO===today&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
+const monthly=ds.filter(s=>s.dateISO.startsWith(month)).reduce((a,s)=>a+Number(s.amount||0),0)+os.filter(o=>o.dateISO.startsWith(month)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
 document.getElementById("dailySales").textContent=money(daily);
 document.getElementById("monthlySales").textContent=money(monthly);
-
-const months=[];
-const now=new Date();
+const months=[],now=new Date();
 for(let i=5;i>=0;i--){
 const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-months.push({key,label:d.toLocaleDateString("fa-IR",{month:"short"}),value:0});
+months.push({key:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"),label:d.toLocaleDateString("fa-IR",{month:"short"}),value:0});
 }
 months.forEach(m=>{
-m.value=datedSales.filter(s=>s.dateISO.startsWith(m.key)).reduce((a,s)=>a+Number(s.amount||0),0)+
-datedOrders.filter(o=>o.dateISO.startsWith(m.key)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
+m.value=ds.filter(s=>s.dateISO.startsWith(m.key)).reduce((a,s)=>a+Number(s.amount||0),0)+os.filter(o=>o.dateISO.startsWith(m.key)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
 });
 const max=Math.max(1,...months.map(m=>m.value));
 document.getElementById("chart").innerHTML=months.map(m=>`
-<div class="bar-row">
-<span>${m.label}</span>
-<div class="bar-bg"><div class="bar" style="width:${m.value/max*100}%"></div></div>
-<strong>${m.value.toLocaleString("fa-IR")}</strong>
-</div>`).join("");
+<div class="bar-row"><span>${m.label}</span><div class="bar-bg"><div class="bar" style="width:${m.value/max*100}%"></div></div><strong>${m.value.toLocaleString("fa-IR")}</strong></div>`).join("");
 }
 function render(){
+const s=completedSales(),e=totalExpense(),profit=s-e;
 document.getElementById("customerCount").textContent=customers.length.toLocaleString("fa-IR");
-document.getElementById("totalSales").textContent=money(completedSales());
+document.getElementById("totalSales").textContent=money(s);
+document.getElementById("totalExpenses").textContent=money(e);
+document.getElementById("netProfit").textContent=money(profit);
+document.getElementById("netProfit").className=profit<0?"loss":"profit";
 document.getElementById("completedCount").textContent=orders.filter(o=>o.status==="تکمیل شده").length.toLocaleString("fa-IR");
 document.getElementById("pendingCount").textContent=orders.filter(o=>o.status==="در انتظار").length.toLocaleString("fa-IR");
-renderCustomers();renderOrders();renderSelect();renderReports();
+document.getElementById("accountSales").textContent=money(s);
+document.getElementById("accountExpenses").textContent=money(e);
+document.getElementById("accountProfit").textContent=money(profit);
+document.getElementById("accountProfit").className=profit<0?"loss":"profit";
+renderCustomers();renderOrders();renderExpenses();renderSelect();renderReports();
 }
 render();
 </script>
