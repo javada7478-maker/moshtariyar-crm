@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -7,30 +8,30 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f3f5f9;color:#202938;font-family:Tahoma,Arial,sans-serif}
-header{background:#172554;color:white;padding:20px;text-align:center}
-main{max-width:850px;margin:20px auto;padding:15px}
-.card{background:white;border-radius:13px;padding:18px;margin-bottom:15px;box-shadow:0 2px 10px #0000000b}
-input,button{width:100%;padding:13px;margin:6px 0;border-radius:8px;border:1px solid #d4d9e2;font-size:15px}
+body{margin:0;background:#f1f5f9;color:#1e293b;font-family:Tahoma,Arial}
+header{background:#172554;color:white;text-align:center;padding:22px}
+main{max-width:850px;margin:20px auto;padding:14px}
+.card{background:white;border-radius:14px;padding:17px;margin-bottom:15px;box-shadow:0 2px 10px #0001}
+input,button{width:100%;padding:13px;margin:6px 0;border:1px solid #dbe2ea;border-radius:9px;font-size:15px}
 button{background:#2563eb;color:white;border:0;cursor:pointer}
-button.danger{background:#dc2626}
-button.edit{background:#0f766e}
-nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:15px}
-nav button{width:auto;flex:1;min-width:100px}
-.item{border-bottom:1px solid #eee;padding:12px 0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.danger{background:#dc2626}
+.edit{background:#0f766e}
+nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+nav button{flex:1;min-width:95px}
+.item{padding:12px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .actions{display:flex;gap:5px}
-.actions button{width:auto;margin:0;padding:8px 12px}
-.small{font-size:12px;color:#64748b}
+.actions button{width:auto;padding:8px 11px}
 .hidden{display:none}
-h3{margin-top:0}
+.small{font-size:12px;color:#64748b}
 </style>
 </head>
 <body>
 <header>
 <h2>مشتریار</h2>
-<div>مدیریت مشتریان و فروش</div>
+<div>مدیریت هوشمند مشتریان و فروش</div>
 </header>
 <main>
+
 <section id="auth" class="card">
 <h3>ورود به مشتریار</h3>
 <input id="email" type="email" placeholder="ایمیل">
@@ -55,17 +56,20 @@ h3{margin-top:0}
 </nav>
 
 <div id="customers" class="card">
-<h3>ثبت مشتری</h3>
+<h3>مدیریت مشتریان</h3>
 <input id="cname" placeholder="نام مشتری">
 <input id="cphone" placeholder="شماره تماس">
 <button onclick="addCustomer()">ثبت مشتری</button>
+<hr>
+<h3>جست‌وجوی مشتری</h3>
+<input id="searchCustomer" placeholder="نام یا شماره تماس را وارد کن" oninput="renderCustomers()">
 <div id="customerList"></div>
 </div>
 
 <div id="sales" class="card hidden">
 <h3>ثبت فروش</h3>
 <input id="sname" placeholder="نام مشتری">
-<input id="samount" type="number" placeholder="مبلغ فروش">
+<input id="samount" type="number" placeholder="مبلغ فروش به تومان">
 <button onclick="addSale()">ثبت فروش</button>
 <div id="salesList"></div>
 </div>
@@ -73,7 +77,7 @@ h3{margin-top:0}
 <div id="orders" class="card hidden">
 <h3>ثبت سفارش</h3>
 <input id="oname" placeholder="نام مشتری">
-<input id="oamount" type="number" placeholder="مبلغ سفارش">
+<input id="oamount" type="number" placeholder="مبلغ سفارش به تومان">
 <button onclick="addOrder()">ثبت سفارش</button>
 <div id="orderList"></div>
 </div>
@@ -81,7 +85,7 @@ h3{margin-top:0}
 <div id="expenses" class="card hidden">
 <h3>ثبت هزینه</h3>
 <input id="etitle" placeholder="عنوان هزینه">
-<input id="eamount" type="number" placeholder="مبلغ هزینه">
+<input id="eamount" type="number" placeholder="مبلغ هزینه به تومان">
 <button onclick="addExpense()">ثبت هزینه</button>
 <div id="expenseList"></div>
 </div>
@@ -91,7 +95,10 @@ h3{margin-top:0}
 <p>مجموع فروش: <b id="totalSales">۰</b></p>
 <p>مجموع هزینه: <b id="totalExpenses">۰</b></p>
 <p>سود خالص: <b id="netProfit">۰</b></p>
+<p>تعداد مشتریان: <b id="totalCustomers">۰</b></p>
+<p>تعداد سفارش‌ها: <b id="totalOrders">۰</b></p>
 </div>
+
 </section>
 </main>
 
@@ -103,17 +110,17 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let user=null;
 let customers=[],sales=[],orders=[],expenses=[];
 const $=id=>document.getElementById(id);
-const msg=t=>$("authMsg").textContent=t;
 const money=n=>Number(n||0).toLocaleString("fa-IR")+" تومان";
+const msg=t=>$("authMsg").textContent=t;
 
 async function signUp(){
  const email=$("email").value.trim();
  const password=$("password").value;
- if(!email||password.length<6)return msg("ایمیل و رمز حداقل ۶ حرفی وارد کن");
+ if(!email||password.length<6)return msg("ایمیل و رمز حداقل ۶ کاراکتری وارد کن");
  const {data,error}=await db.auth.signUp({email,password});
  if(error)return msg(error.message);
  if(data.session){user=data.user;await showApp()}
- else msg("ثبت‌نام انجام شد. ایمیلت را برای تأیید بررسی کن.");
+ else msg("ثبت‌نام انجام شد؛ ایمیلت را برای تأیید بررسی کن.");
 }
 
 async function signIn(){
@@ -140,7 +147,8 @@ async function showApp(){
 }
 
 async function loadData(){
- for(const table of ["customers","sales","orders","expenses"]){
+ const tables=["customers","sales","orders","expenses"];
+ for(const table of tables){
   const {data,error}=await db.from(table).select("*").order("created_at",{ascending:false});
   if(error){alert("خطا در دریافت اطلاعات: "+error.message);return}
   if(table==="customers")customers=data;
@@ -151,7 +159,6 @@ async function loadData(){
  render();
 }
 
-/* ثبت اطلاعات */
 async function addRow(table,row){
  const {error}=await db.from(table).insert({...row,owner_id:user.id});
  if(error){alert(error.message);return false}
@@ -161,28 +168,25 @@ async function addRow(table,row){
 
 async function addCustomer(){
  const name=$("cname").value.trim();
+ const phone=$("cphone").value.trim();
  if(!name)return alert("نام مشتری را وارد کن");
- const ok=await addRow("customers",{name,phone:$("cphone").value.trim()});
+ const ok=await addRow("customers",{name,phone});
  if(ok){$("cname").value="";$("cphone").value=""}
 }
 
-/* ویرایش مشتری */
 async function editCustomer(id){
- const customer=customers.find(x=>x.id===id);
- if(!customer)return;
- const name=prompt("نام جدید مشتری:",customer.name);
+ const c=customers.find(x=>x.id===id);
+ if(!c)return;
+ const name=prompt("نام جدید:",c.name);
  if(name===null)return;
- if(!name.trim())return alert("نام مشتری نمی‌تواند خالی باشد");
- const phone=prompt("شماره تماس جدید:",customer.phone||"");
+ if(!name.trim())return alert("نام نمی‌تواند خالی باشد");
+ const phone=prompt("شماره تماس جدید:",c.phone||"");
  if(phone===null)return;
-
  const {error}=await db.from("customers")
-  .update({name:name.trim(),phone:phone.trim()})
-  .eq("id",id);
-
- if(error){alert("خطا در ویرایش: "+error.message);return}
- alert("اطلاعات مشتری ویرایش شد");
+  .update({name:name.trim(),phone:phone.trim()}).eq("id",id);
+ if(error)return alert(error.message);
  await loadData();
+ alert("مشتری ویرایش شد");
 }
 
 async function addSale(){
@@ -209,58 +213,62 @@ async function addExpense(){
  if(ok){$("etitle").value="";$("eamount").value=""}
 }
 
-/* حذف اطلاعات */
 async function removeRow(table,id){
  if(!confirm("از حذف مطمئنی؟"))return;
  const {error}=await db.from(table).delete().eq("id",id);
- if(error){alert(error.message);return}
+ if(error)return alert(error.message);
  await loadData();
 }
 
-function tab(id){
- ["customers","sales","orders","expenses","reports"].forEach(x=>{
-  $(x).classList.toggle("hidden",x!==id);
- });
+function renderCustomers(){
+ const q=$("searchCustomer").value.trim().toLowerCase();
+ const filtered=customers.filter(c=>
+  (c.name||"").toLowerCase().includes(q)||
+  (c.phone||"").toLowerCase().includes(q)
+ );
+ $("customerList").innerHTML=filtered.length?filtered.map(c=>`
+  <div class="item">
+   <span>${esc(c.name)} - ${esc(c.phone||"بدون شماره")}</span>
+   <div class="actions">
+    <button class="edit" onclick="editCustomer('${c.id}')">ویرایش</button>
+    <button class="danger" onclick="removeRow('customers','${c.id}')">حذف</button>
+   </div>
+  </div>`).join(""):"مشتری پیدا نشد";
 }
 
 function render(){
- $("customerList").innerHTML=customers.map(x=>`
- <div class="item">
- <span>${esc(x.name)} - ${esc(x.phone||"")}</span>
- <div class="actions">
- <button class="edit" onclick="editCustomer('${x.id}')">ویرایش</button>
- <button class="danger" onclick="removeRow('customers','${x.id}')">حذف</button>
- </div>
- </div>`).join("");
+ renderCustomers();
 
  $("salesList").innerHTML=sales.map(x=>`
- <div class="item">
- <span>${esc(x.customer_name)} - ${money(x.amount)}</span>
- <button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button>
- </div>`).join("");
+ <div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)}</span>
+ <button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button></div>`).join("");
 
  $("orderList").innerHTML=orders.map(x=>`
- <div class="item">
- <span>${esc(x.customer_name)} - ${money(x.amount)} (${esc(x.status)})</span>
- <button class="danger" style="width:auto" onclick="removeRow('orders','${x.id}')">حذف</button>
- </div>`).join("");
+ <div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)} (${esc(x.status)})</span>
+ <button class="danger" style="width:auto" onclick="removeRow('orders','${x.id}')">حذف</button></div>`).join("");
 
  $("expenseList").innerHTML=expenses.map(x=>`
- <div class="item">
- <span>${esc(x.title)} - ${money(x.amount)}</span>
- <button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button>
- </div>`).join("");
+ <div class="item"><span>${esc(x.title)} - ${money(x.amount)}</span>
+ <button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button></div>`).join("");
 
  const s=sales.reduce((a,x)=>a+Number(x.amount),0);
  const e=expenses.reduce((a,x)=>a+Number(x.amount),0);
  $("totalSales").textContent=money(s);
  $("totalExpenses").textContent=money(e);
  $("netProfit").textContent=money(s-e);
+ $("totalCustomers").textContent=customers.length.toLocaleString("fa-IR");
+ $("totalOrders").textContent=orders.length.toLocaleString("fa-IR");
+}
+
+function tab(id){
+ ["customers","sales","orders","expenses","reports"].forEach(x=>
+  $(x).classList.toggle("hidden",x!==id)
+ );
 }
 
 function esc(s){
  return String(s).replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
  }[c]));
 }
 
@@ -283,4 +291,4 @@ db.auth.getSession().then(({data})=>{
 });
 </script>
 </body>
- </html>
+</html>
