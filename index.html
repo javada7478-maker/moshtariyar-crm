@@ -3,207 +3,242 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>مشتریار CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشتریار | مدیریت فروشگاه</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f1f5f9;font-family:tahoma;color:#172554}
-header{background:#172554;color:white;padding:24px}
-main{max-width:850px;margin:auto;padding:16px}
-.card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 3px 12px #ddd}
-h1{margin:0 0 8px}h2{font-size:18px}
-input,select{width:100%;padding:13px;margin:7px 0;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;background:white}
-button{padding:11px 15px;border:0;border-radius:8px;background:#2563eb;color:white;font-family:inherit;margin:3px}
-.delete{background:#dc2626}.edit{background:#0f766e}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.number{font-size:22px;color:#2563eb;font-weight:bold;margin-top:10px}
-.customer,.order{padding:13px 0;border-bottom:1px solid #ddd}
-small{color:#64748b}
+body{margin:0;padding:18px;background:#f3f5f9;color:#202b3c;font-family:Tahoma,Arial,sans-serif}
+.container{max-width:950px;margin:auto}
+header{background:linear-gradient(135deg,#172554,#2563eb);color:white;padding:25px;border-radius:18px;margin-bottom:18px}
+header h1{margin:0 0 8px;font-size:27px}
+header p{margin:0;color:#dbeafe}
+h2{font-size:19px;margin:0 0 15px}
+.panel{background:white;padding:18px;border-radius:15px;margin-bottom:17px;box-shadow:0 3px 12px #00000009}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:17px}
+.stat{background:white;padding:17px;border-radius:14px;border:1px solid #e8edf5}
+.stat small{color:#64748b}
+.stat strong{display:block;font-size:21px;margin-top:10px;color:#1d4ed8}
+input,select{width:100%;padding:12px;border:1px solid #d7deea;border-radius:9px;margin:6px 0 12px;font-family:inherit;font-size:14px}
+button{border:0;border-radius:9px;padding:11px 15px;margin:3px;font-family:inherit;cursor:pointer;background:#2563eb;color:white}
+button.danger{background:#dc2626}
+button.gray{background:#64748b}
+button.green{background:#059669}
+button.orange{background:#d97706}
+.item{border:1px solid #e5eaf2;padding:13px;border-radius:11px;margin:9px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.muted{color:#64748b;font-size:12px}
+.status{font-size:12px;padding:5px 9px;border-radius:20px;background:#eff6ff;color:#1d4ed8}
+.bar-row{display:grid;grid-template-columns:75px 1fr 85px;gap:8px;align-items:center;margin:13px 0;font-size:12px}
+.bar-bg{height:13px;background:#e8edf5;border-radius:20px;overflow:hidden}
+.bar{height:100%;background:#2563eb;border-radius:20px}
+.empty{color:#94a3b8;text-align:center;padding:15px}
+@media(max-width:500px){body{padding:10px}.item{align-items:flex-start}.item button{padding:9px}}
 </style>
 </head>
 <body>
+<div class="container">
 <header>
-<h1>مشتریار CRM</h1>
-<p>مدیریت هوشمند مشتریان و فروش</p>
+<h1>مشتریار</h1>
+<p>سیستم مدیریت مشتریان، سفارش‌ها و فروش</p>
 </header>
-<main>
 
 <div class="stats">
-<div class="card">تعداد مشتریان<div class="number" id="count">۰</div></div>
-<div class="card">مجموع فروش<div class="number" id="sales">۰</div></div>
+<div class="stat"><small>تعداد مشتریان</small><strong id="customerCount">۰</strong></div>
+<div class="stat"><small>مجموع فروش</small><strong id="totalSales">۰</strong></div>
+<div class="stat"><small>سفارش‌های تکمیل‌شده</small><strong id="completedCount">۰</strong></div>
+<div class="stat"><small>سفارش‌های در انتظار</small><strong id="pendingCount">۰</strong></div>
 </div>
 
-<div class="card">
-<h2>ثبت مشتری جدید</h2>
-<input id="name" placeholder="نام مشتری">
-<input id="phone" placeholder="شماره تماس">
+<section class="panel">
+<h2>گزارش فروش</h2>
+<div class="stats">
+<div class="stat"><small>فروش امروز</small><strong id="dailySales">۰</strong></div>
+<div class="stat"><small>فروش این ماه</small><strong id="monthlySales">۰</strong></div>
+</div>
+<p class="muted">گزارش روزانه و ماهانه برای فروش‌هایی محاسبه می‌شود که از این نسخه به بعد تاریخ دقیق دارند.</p>
+<h2 style="margin-top:22px">نمودار فروش ۶ ماه اخیر</h2>
+<div id="chart"></div>
+</section>
+
+<section class="panel">
+<h2>افزودن مشتری</h2>
+<input id="customerName" placeholder="نام مشتری">
+<input id="customerPhone" placeholder="شماره تلفن">
 <button onclick="addCustomer()">ثبت مشتری</button>
-</div>
+</section>
 
-<div class="card">
-<h2>ثبت سفارش جدید</h2>
-<select id="orderCustomer">
-<option value="">انتخاب مشتری</option>
-</select>
-<input id="orderAmount" type="number" min="1" placeholder="مبلغ سفارش به تومان">
-<select id="orderStatus">
-<option value="در انتظار">در انتظار</option>
-<option value="در حال انجام">در حال انجام</option>
-<option value="تکمیل شده">تکمیل شده</option>
-</select>
-<button onclick="addOrder()">ثبت سفارش</button>
-</div>
+<section class="panel">
+<h2>فهرست مشتریان</h2>
+<input id="search" placeholder="جستجوی نام یا شماره..." oninput="renderCustomers()">
+<div id="customersList"></div>
+</section>
 
-<div class="card">
-<h2>سوابق سفارش‌ها</h2>
-<div id="orders"></div>
-</div>
-
-<div class="card">
+<section class="panel">
 <h2>ثبت فروش مستقیم</h2>
 <input id="saleName" placeholder="نام مشتری">
-<input id="amount" type="number" min="1" placeholder="مبلغ فروش به تومان">
-<button onclick="addSale()">ثبت فروش</button>
+<input id="saleAmount" type="number" min="0" placeholder="مبلغ فروش به تومان">
+<button class="green" onclick="addSale()">ثبت فروش</button>
+</section>
+
+<section class="panel">
+<h2>ثبت سفارش جدید</h2>
+<select id="orderCustomer"></select>
+<input id="orderAmount" type="number" min="0" placeholder="مبلغ سفارش به تومان">
+<button onclick="addOrder()">ثبت سفارش</button>
+</section>
+
+<section class="panel">
+<h2>فهرست سفارش‌ها</h2>
+<div id="ordersList"></div>
+</section>
 </div>
 
-<div class="card">
-<h2>فهرست مشتریان</h2>
-<input id="search" placeholder="جست‌وجوی مشتری..." oninput="render()">
-<div id="list"></div>
-</div>
-
-</main>
 <script>
-let customers=JSON.parse(localStorage.getItem('crmCustomers')||'[]');
-let sales=JSON.parse(localStorage.getItem('crmSales')||'[]');
-let orders=JSON.parse(localStorage.getItem('crmOrders')||'[]');
-
-function safe(s){
-return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
+const readData=(key)=>{try{return JSON.parse(localStorage.getItem(key))||[]}catch(e){return []}};
+let customers=readData("crmCustomers");
+let sales=readData("crmSales");
+let orders=readData("crmOrders");
 
 function save(){
-localStorage.setItem('crmCustomers',JSON.stringify(customers));
-localStorage.setItem('crmSales',JSON.stringify(sales));
-localStorage.setItem('crmOrders',JSON.stringify(orders));
+localStorage.setItem("crmCustomers",JSON.stringify(customers));
+localStorage.setItem("crmSales",JSON.stringify(sales));
+localStorage.setItem("crmOrders",JSON.stringify(orders));
+}
+function money(n){return Number(n||0).toLocaleString("fa-IR")+" تومان"}
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function escapeHTML(value){
+return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function completedSales(){
+return sales.reduce((sum,s)=>sum+Number(s.amount||0),0)+
+orders.filter(o=>o.status==="تکمیل شده").reduce((sum,o)=>sum+Number(o.amount||0),0);
+}
+function addCustomer(){
+const name=document.getElementById("customerName").value.trim();
+const phone=document.getElementById("customerPhone").value.trim();
+if(!name||!phone){alert("نام و شماره تلفن را وارد کن");return}
+customers.push({id:Date.now(),name,phone});
+save();document.getElementById("customerName").value="";
+document.getElementById("customerPhone").value="";
 render();
 }
-
-function addCustomer(){
-let name=document.getElementById('name').value.trim();
-let phone=document.getElementById('phone').value.trim();
-if(!name||!phone){alert('نام و شماره تماس را وارد کنید');return;}
-customers.push({id:Date.now(),name,phone});
-document.getElementById('name').value='';
-document.getElementById('phone').value='';
-save();
-}
-
 function editCustomer(id){
-let c=customers.find(x=>x.id===id);
+const c=customers.find(x=>x.id===id);
 if(!c)return;
-let name=prompt('نام جدید:',c.name);
-if(name===null)return;
-let phone=prompt('شماره تماس جدید:',c.phone);
+const name=prompt("نام جدید مشتری:",c.name);
+if(name===null||!name.trim())return;
+const phone=prompt("شماره تلفن جدید:",c.phone);
 if(phone===null)return;
-if(!name.trim()||!phone.trim()){alert('اطلاعات نمی‌تواند خالی باشد');return;}
-c.name=name.trim();c.phone=phone.trim();save();
+c.name=name.trim();c.phone=phone.trim();
+save();render();
 }
-
-function removeCustomer(id){
-if(!confirm('این مشتری حذف شود؟'))return;
+function deleteCustomer(id){
+if(!confirm("مشتری حذف شود؟"))return;
 customers=customers.filter(c=>c.id!==id);
-save();
+save();render();
 }
-
+function renderCustomers(){
+const q=document.getElementById("search").value.trim().toLowerCase();
+const list=customers.filter(c=>(c.name+" "+c.phone).toLowerCase().includes(q));
+document.getElementById("customersList").innerHTML=list.length?list.map(c=>`
+<div class="item">
+<div><strong>${escapeHTML(c.name)}</strong><div class="muted">${escapeHTML(c.phone)}</div></div>
+<div><button class="gray" onclick="editCustomer(${Number(c.id)})">ویرایش</button>
+<button class="danger" onclick="deleteCustomer(${Number(c.id)})">حذف</button></div>
+</div>`).join(""):'<div class="empty">مشتری‌ای پیدا نشد</div>';
+}
 function addSale(){
-let name=document.getElementById('saleName').value.trim();
-let amount=Number(document.getElementById('amount').value);
-if(!name||amount<=0){alert('نام و مبلغ معتبر وارد کنید');return;}
-sales.push({name,amount});
-document.getElementById('saleName').value='';
-document.getElementById('amount').value='';
+const name=document.getElementById("saleName").value.trim();
+const amount=Number(document.getElementById("saleAmount").value);
+if(!name||!amount||amount<0){alert("نام و مبلغ معتبر وارد کن");return}
+sales.push({name,amount,dateISO:todayISO()});
 save();
+document.getElementById("saleName").value="";
+document.getElementById("saleAmount").value="";
+render();
+alert("فروش ثبت شد");
 }
-
 function addOrder(){
-let id=Number(document.getElementById('orderCustomer').value);
-let customer=customers.find(c=>c.id===id);
-let amount=Number(document.getElementById('orderAmount').value);
-let status=document.getElementById('orderStatus').value;
-if(!customer){alert('ابتدا یک مشتری انتخاب کنید');return;}
-if(amount<=0){alert('مبلغ معتبر وارد کنید');return;}
+const id=Number(document.getElementById("orderCustomer").value);
+const c=customers.find(x=>Number(x.id)===id);
+const amount=Number(document.getElementById("orderAmount").value);
+if(!c){alert("ابتدا یک مشتری انتخاب کن");return}
+if(!amount||amount<0){alert("مبلغ معتبر وارد کن");return}
 orders.push({
-id:Date.now(),
-customerId:id,
-name:customer.name,
-amount:amount,
-status:status,
-date:new Date().toLocaleDateString('fa-IR')
+id:Date.now(),customerId:c.id,name:c.name,amount,
+status:"در انتظار",
+date:new Date().toLocaleDateString("fa-IR"),
+dateISO:todayISO()
 });
-document.getElementById('orderAmount').value='';
 save();
-alert('سفارش با موفقیت ثبت شد');
+document.getElementById("orderAmount").value="";
+render();
+alert("سفارش ثبت شد");
 }
-
 function changeStatus(id){
-let order=orders.find(o=>o.id===id);
-if(!order)return;
-let statuses=['در انتظار','در حال انجام','تکمیل شده'];
-let next=statuses[(statuses.indexOf(order.status)+1)%3];
-order.status=next;
-save();
+const o=orders.find(x=>x.id===id);
+if(!o)return;
+const statuses=["در انتظار","در حال انجام","تکمیل شده"];
+o.status=statuses[(statuses.indexOf(o.status)+1)%statuses.length];
+save();render();
 }
-
-function removeOrder(id){
-if(!confirm('این سفارش حذف شود؟'))return;
+function deleteOrder(id){
+if(!confirm("این سفارش حذف شود؟"))return;
 orders=orders.filter(o=>o.id!==id);
-save();
+save();render();
 }
+function renderOrders(){
+const el=document.getElementById("ordersList");
+el.innerHTML=orders.length?orders.map(o=>`
+<div class="item">
+<div><strong>${escapeHTML(o.name)}</strong>
+<div>${money(o.amount)}</div>
+<div class="muted">${escapeHTML(o.date||"")}</div>
+<span class="status">${escapeHTML(o.status)}</span></div>
+<div><button class="orange" onclick="changeStatus(${Number(o.id)})">تغییر وضعیت</button>
+<button class="danger" onclick="deleteOrder(${Number(o.id)})">حذف</button></div>
+</div>`).join(""):'<div class="empty">هنوز سفارشی ثبت نشده است</div>';
+}
+function renderSelect(){
+const el=document.getElementById("orderCustomer");
+el.innerHTML=customers.length?customers.map(c=>`<option value="${Number(c.id)}">${escapeHTML(c.name)}</option>`).join(""):'<option value="">ابتدا مشتری ثبت کن</option>';
+}
+function renderReports(){
+const today=todayISO();
+const month=today.slice(0,7);
+const datedSales=sales.filter(s=>s.dateISO);
+const datedOrders=orders.filter(o=>o.dateISO);
+const daily=datedSales.filter(s=>s.dateISO===today).reduce((a,s)=>a+Number(s.amount||0),0)+
+datedOrders.filter(o=>o.dateISO===today&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
+const monthly=datedSales.filter(s=>s.dateISO.startsWith(month)).reduce((a,s)=>a+Number(s.amount||0),0)+
+datedOrders.filter(o=>o.dateISO.startsWith(month)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
+document.getElementById("dailySales").textContent=money(daily);
+document.getElementById("monthlySales").textContent=money(monthly);
 
+const months=[];
+const now=new Date();
+for(let i=5;i>=0;i--){
+const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+const key=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+months.push({key,label:d.toLocaleDateString("fa-IR",{month:"short"}),value:0});
+}
+months.forEach(m=>{
+m.value=datedSales.filter(s=>s.dateISO.startsWith(m.key)).reduce((a,s)=>a+Number(s.amount||0),0)+
+datedOrders.filter(o=>o.dateISO.startsWith(m.key)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
+});
+const max=Math.max(1,...months.map(m=>m.value));
+document.getElementById("chart").innerHTML=months.map(m=>`
+<div class="bar-row">
+<span>${m.label}</span>
+<div class="bar-bg"><div class="bar" style="width:${m.value/max*100}%"></div></div>
+<strong>${m.value.toLocaleString("fa-IR")}</strong>
+</div>`).join("");
+}
 function render(){
-let q=document.getElementById('search').value.trim().toLowerCase();
-document.getElementById('count').textContent=customers.length.toLocaleString('fa-IR');
-let total=sales.reduce((s,x)=>s+x.amount,0)+orders.filter(o=>o.status==='تکمیل شده').reduce((s,o)=>s+o.amount,0);
-document.getElementById('sales').textContent=total.toLocaleString('fa-IR');
-
-let select=document.getElementById('orderCustomer');
-let previous=select.value;
-select.innerHTML='<option value="">انتخاب مشتری</option>';
-customers.forEach(c=>{
-let option=document.createElement('option');
-option.value=c.id;
-option.textContent=c.name+' - '+c.phone;
-select.appendChild(option);
-});
-if(customers.some(c=>String(c.id)===previous))select.value=previous;
-
-let filtered=customers.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q));
-let list=document.getElementById('list');
-list.innerHTML='';
-if(!filtered.length){
-list.textContent='هنوز مشتری ثبت نشده است.';
-}else{
-filtered.forEach(c=>{
-let div=document.createElement('div');
-div.className='customer';
-div.innerHTML='<b>'+safe(c.name)+'</b><br><small>'+safe(c.phone)+'</small><br><button class="edit" onclick="editCustomer('+Number(c.id)+')">ویرایش</button><button class="delete" onclick="removeCustomer('+Number(c.id)+')">حذف</button>';
-list.appendChild(div);
-});
-}
-
-let orderList=document.getElementById('orders');
-orderList.innerHTML='';
-if(!orders.length){
-orderList.textContent='هنوز سفارشی ثبت نشده است.';
-}else{
-orders.slice().reverse().forEach(o=>{
-let div=document.createElement('div');
-div.className='order';
-div.innerHTML='<b>'+safe(o.name)+'</b><br><small>مبلغ: '+Number(o.amount).toLocaleString('fa-IR')+' تومان</small><br><small>تاریخ: '+safe(o.date)+'</small><br><small>وضعیت: '+safe(o.status)+'</small><br><button onclick="changeStatus('+Number(o.id)+')">تغییر وضعیت</button><button class="delete" onclick="removeOrder('+Number(o.id)+')">حذف سفارش</button>';
-orderList.appendChild(div);
-});
-}
+document.getElementById("customerCount").textContent=customers.length.toLocaleString("fa-IR");
+document.getElementById("totalSales").textContent=money(completedSales());
+document.getElementById("completedCount").textContent=orders.filter(o=>o.status==="تکمیل شده").length.toLocaleString("fa-IR");
+document.getElementById("pendingCount").textContent=orders.filter(o=>o.status==="در انتظار").length.toLocaleString("fa-IR");
+renderCustomers();renderOrders();renderSelect();renderReports();
 }
 render();
 </script>
