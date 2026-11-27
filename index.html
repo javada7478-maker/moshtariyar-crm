@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -12,15 +11,13 @@ body{margin:0;background:#f1f5f9;font-family:tahoma;color:#172554}
 header{background:#172554;color:white;padding:24px}
 main{max-width:850px;margin:auto;padding:16px}
 .card{background:white;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 3px 12px #ddd}
-h1{margin:0 0 8px}
-h2{font-size:18px}
-input{width:100%;padding:13px;margin:7px 0;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit}
-button{padding:10px 14px;border:0;border-radius:8px;background:#2563eb;color:white;font-family:inherit;margin:3px}
-.delete{background:#dc2626}
-.edit{background:#0f766e}
+h1{margin:0 0 8px}h2{font-size:18px}
+input,select{width:100%;padding:13px;margin:7px 0;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;background:white}
+button{padding:11px 15px;border:0;border-radius:8px;background:#2563eb;color:white;font-family:inherit;margin:3px}
+.delete{background:#dc2626}.edit{background:#0f766e}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.number{font-size:23px;color:#2563eb;font-weight:bold;margin-top:10px}
-.customer{padding:12px 0;border-bottom:1px solid #ddd}
+.number{font-size:22px;color:#2563eb;font-weight:bold;margin-top:10px}
+.customer,.order{padding:13px 0;border-bottom:1px solid #ddd}
 small{color:#64748b}
 </style>
 </head>
@@ -30,6 +27,7 @@ small{color:#64748b}
 <p>مدیریت هوشمند مشتریان و فروش</p>
 </header>
 <main>
+
 <div class="stats">
 <div class="card">تعداد مشتریان<div class="number" id="count">۰</div></div>
 <div class="card">مجموع فروش<div class="number" id="sales">۰</div></div>
@@ -43,9 +41,28 @@ small{color:#64748b}
 </div>
 
 <div class="card">
-<h2>ثبت فروش</h2>
+<h2>ثبت سفارش جدید</h2>
+<select id="orderCustomer">
+<option value="">انتخاب مشتری</option>
+</select>
+<input id="orderAmount" type="number" min="1" placeholder="مبلغ سفارش به تومان">
+<select id="orderStatus">
+<option value="در انتظار">در انتظار</option>
+<option value="در حال انجام">در حال انجام</option>
+<option value="تکمیل شده">تکمیل شده</option>
+</select>
+<button onclick="addOrder()">ثبت سفارش</button>
+</div>
+
+<div class="card">
+<h2>سوابق سفارش‌ها</h2>
+<div id="orders"></div>
+</div>
+
+<div class="card">
+<h2>ثبت فروش مستقیم</h2>
 <input id="saleName" placeholder="نام مشتری">
-<input id="amount" type="number" placeholder="مبلغ فروش به تومان">
+<input id="amount" type="number" min="1" placeholder="مبلغ فروش به تومان">
 <button onclick="addSale()">ثبت فروش</button>
 </div>
 
@@ -54,11 +71,12 @@ small{color:#64748b}
 <input id="search" placeholder="جست‌وجوی مشتری..." oninput="render()">
 <div id="list"></div>
 </div>
-</main>
 
+</main>
 <script>
 let customers=JSON.parse(localStorage.getItem('crmCustomers')||'[]');
 let sales=JSON.parse(localStorage.getItem('crmSales')||'[]');
+let orders=JSON.parse(localStorage.getItem('crmOrders')||'[]');
 
 function safe(s){
 return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -67,6 +85,7 @@ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'
 function save(){
 localStorage.setItem('crmCustomers',JSON.stringify(customers));
 localStorage.setItem('crmSales',JSON.stringify(sales));
+localStorage.setItem('crmOrders',JSON.stringify(orders));
 render();
 }
 
@@ -83,14 +102,12 @@ save();
 function editCustomer(id){
 let c=customers.find(x=>x.id===id);
 if(!c)return;
-let name=prompt('نام جدید مشتری:',c.name);
+let name=prompt('نام جدید:',c.name);
 if(name===null)return;
 let phone=prompt('شماره تماس جدید:',c.phone);
 if(phone===null)return;
 if(!name.trim()||!phone.trim()){alert('اطلاعات نمی‌تواند خالی باشد');return;}
-c.name=name.trim();
-c.phone=phone.trim();
-save();
+c.name=name.trim();c.phone=phone.trim();save();
 }
 
 function removeCustomer(id){
@@ -109,23 +126,84 @@ document.getElementById('amount').value='';
 save();
 }
 
+function addOrder(){
+let id=Number(document.getElementById('orderCustomer').value);
+let customer=customers.find(c=>c.id===id);
+let amount=Number(document.getElementById('orderAmount').value);
+let status=document.getElementById('orderStatus').value;
+if(!customer){alert('ابتدا یک مشتری انتخاب کنید');return;}
+if(amount<=0){alert('مبلغ معتبر وارد کنید');return;}
+orders.push({
+id:Date.now(),
+customerId:id,
+name:customer.name,
+amount:amount,
+status:status,
+date:new Date().toLocaleDateString('fa-IR')
+});
+document.getElementById('orderAmount').value='';
+save();
+alert('سفارش با موفقیت ثبت شد');
+}
+
+function changeStatus(id){
+let order=orders.find(o=>o.id===id);
+if(!order)return;
+let statuses=['در انتظار','در حال انجام','تکمیل شده'];
+let next=statuses[(statuses.indexOf(order.status)+1)%3];
+order.status=next;
+save();
+}
+
+function removeOrder(id){
+if(!confirm('این سفارش حذف شود؟'))return;
+orders=orders.filter(o=>o.id!==id);
+save();
+}
+
 function render(){
 let q=document.getElementById('search').value.trim().toLowerCase();
 document.getElementById('count').textContent=customers.length.toLocaleString('fa-IR');
-document.getElementById('sales').textContent=sales.reduce((s,x)=>s+x.amount,0).toLocaleString('fa-IR');
+let total=sales.reduce((s,x)=>s+x.amount,0)+orders.filter(o=>o.status==='تکمیل شده').reduce((s,o)=>s+o.amount,0);
+document.getElementById('sales').textContent=total.toLocaleString('fa-IR');
+
+let select=document.getElementById('orderCustomer');
+let previous=select.value;
+select.innerHTML='<option value="">انتخاب مشتری</option>';
+customers.forEach(c=>{
+let option=document.createElement('option');
+option.value=c.id;
+option.textContent=c.name+' - '+c.phone;
+select.appendChild(option);
+});
+if(customers.some(c=>String(c.id)===previous))select.value=previous;
+
 let filtered=customers.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q));
 let list=document.getElementById('list');
 list.innerHTML='';
 if(!filtered.length){
 list.textContent='هنوز مشتری ثبت نشده است.';
-return;
-}
+}else{
 filtered.forEach(c=>{
 let div=document.createElement('div');
 div.className='customer';
 div.innerHTML='<b>'+safe(c.name)+'</b><br><small>'+safe(c.phone)+'</small><br><button class="edit" onclick="editCustomer('+Number(c.id)+')">ویرایش</button><button class="delete" onclick="removeCustomer('+Number(c.id)+')">حذف</button>';
 list.appendChild(div);
 });
+}
+
+let orderList=document.getElementById('orders');
+orderList.innerHTML='';
+if(!orders.length){
+orderList.textContent='هنوز سفارشی ثبت نشده است.';
+}else{
+orders.slice().reverse().forEach(o=>{
+let div=document.createElement('div');
+div.className='order';
+div.innerHTML='<b>'+safe(o.name)+'</b><br><small>مبلغ: '+Number(o.amount).toLocaleString('fa-IR')+' تومان</small><br><small>تاریخ: '+safe(o.date)+'</small><br><small>وضعیت: '+safe(o.status)+'</small><br><button onclick="changeStatus('+Number(o.id)+')">تغییر وضعیت</button><button class="delete" onclick="removeOrder('+Number(o.id)+')">حذف سفارش</button>';
+orderList.appendChild(div);
+});
+}
 }
 render();
 </script>
