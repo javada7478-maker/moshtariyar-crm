@@ -4,10 +4,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>مشتریار CRM</title>
+<title>مشتریار | مدیریت کسب‌وکار</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f1f5f9;font-family:Tahoma,Arial;color:#172554}
+header{background:#172554;color:white;padding:24px 18px}
+header h1{margin:0 0 8px;font-size:25px}
+header p{margin:0;color:#cbd5e1}
+main{max-width:850px;margin:auto;padding:18px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:white;border-radius:14px;padding:17px;margin-bottom:15px;box-shadow:0 3px 12px #0000000a}
+.stat{font-size:13px;color:#64748b}
+.number{font-size:25px;font-weight:bold;margin-top:10px;color:#2563eb}
+h2{font-size:18px;margin-top:0}
+input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:9px;margin:7px 0;font-family:inherit}
+button{border:0;border-radius:9px;background:#2563eb;color:white;padding:13px 18px;font-family:inherit;cursor:pointer}
+.customer{border-bottom:1px solid #e2e8f0;padding:13px 0;display:flex;justify-content:space-between;gap:8px}
+.delete{background:#dc2626;padding:8px 11px}
+small{color:#64748b}
+@media(max-width:400px){.number{font-size:20px}}
+</style>
 </head>
 <body>
-<h1>به مشتریار خوش آمدید</h1>
-<p>سیستم مدیریت مشتریان و فروش</p>
+<header>
+<h1>مشتریار CRM</h1>
+<p>مدیریت هوشمند مشتریان و فروش</p>
+</header>
+<main>
+<div class="stats">
+<div class="card">
+<div class="stat">تعداد مشتریان</div>
+<div class="number" id="count">۰</div>
+</div>
+<div class="card">
+<div class="stat">مجموع فروش (تومان)</div>
+<div class="number" id="sales">۰</div>
+</div>
+</div>
+<div class="card">
+<h2>ثبت مشتری جدید</h2>
+<input id="name" placeholder="نام مشتری">
+<input id="phone" placeholder="شماره تماس">
+<button onclick="addCustomer()">ثبت مشتری</button>
+</div>
+<div class="card">
+<h2>ثبت فروش</h2>
+<input id="saleName" placeholder="نام مشتری">
+<input id="amount" type="number" placeholder="مبلغ فروش به تومان">
+<button onclick="addSale()">ثبت فروش</button>
+</div>
+<div class="card">
+<h2>فهرست مشتریان</h2>
+<input id="search" placeholder="جست‌وجوی مشتری..." oninput="render()">
+<div id="list"></div>
+</div>
+</main>
+<script>
+let customers=JSON.parse(localStorage.getItem('crmCustomers')||'[]');
+let sales=JSON.parse(localStorage.getItem('crmSales')||'[]');
+
+function save(){
+localStorage.setItem('crmCustomers',JSON.stringify(customers));
+localStorage.setItem('crmSales',JSON.stringify(sales));
+render();
+}
+function addCustomer(){
+let name=document.getElementById('name').value.trim();
+let phone=document.getElementById('phone').value.trim();
+if(!name||!phone){alert('نام و شماره تماس را وارد کنید');return;}
+customers.push({id:Date.now(),name,phone});
+document.getElementById('name').value='';
+document.getElementById('phone').value='';
+save();
+}
+function addSale(){
+let name=document.getElementById('saleName').value.trim();
+let amount=Number(document.getElementById('amount').value);
+if(!name||amount<=0){alert('نام مشتری و مبلغ معتبر وارد کنید');return;}
+sales.push({name,amount});
+document.getElementById('saleName').value='';
+document.getElementById('amount').value='';
+save();
+}
+function removeCustomer(id){
+if(confirm('مشتری حذف شود؟')){
+customers=customers.filter(c=>c.id!==id);
+save();
+}
+}
+function render(){
+let q=document.getElementById('search').value.trim().toLowerCase();
+document.getElementById('count').textContent=customers.length.toLocaleString('fa-IR');
+document.getElementById('sales').textContent=sales.reduce((s,x)=>s+x.amount,0).toLocaleString('fa-IR');
+let filtered=customers.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q));
+document.getElementById('list').innerHTML=filtered.length?filtered.map(c=>`<div class="customer"><div><b>${c.name}</b><br><small>${c.phone}</small></div><button class="delete" onclick="removeCustomer(${c.id})">حذف</button></div>`).join(''):'<small>هنوز مشتری ثبت نشده است.</small>';
+}
+render();
+</script>
 </body>
 </html>
