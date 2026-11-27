@@ -1,285 +1,228 @@
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>مشتریار</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:15px;background:#f3f5f9;color:#202b3c;font-family:Tahoma,Arial,sans-serif}
-.container{max-width:950px;margin:auto}
-header{background:linear-gradient(135deg,#172554,#2563eb);color:white;padding:25px;border-radius:18px;margin-bottom:18px}
-header h1{margin:0 0 8px}
-header p{margin:0;color:#dbeafe}
-h2{font-size:19px;margin:0 0 15px}
-.panel{background:white;padding:18px;border-radius:15px;margin-bottom:17px;box-shadow:0 3px 12px #00000009}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:17px}
-.stat{background:white;padding:17px;border-radius:14px;border:1px solid #e8edf5}
-.stat small{color:#64748b}
-.stat strong{display:block;font-size:19px;margin-top:10px;color:#1d4ed8}
-input,select{width:100%;padding:12px;border:1px solid #d7deea;border-radius:9px;margin:6px 0 12px;font-family:inherit;font-size:14px}
-button{border:0;border-radius:9px;padding:11px 15px;margin:3px;font-family:inherit;cursor:pointer;background:#2563eb;color:white}
-.danger{background:#dc2626}
-.gray{background:#64748b}
-.green{background:#059669}
-.orange{background:#d97706}
-.item{border:1px solid #e5eaf2;padding:13px;border-radius:11px;margin:9px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.muted{color:#64748b;font-size:12px}
-.status{font-size:12px;padding:5px 9px;border-radius:20px;background:#eff6ff;color:#1d4ed8}
-.bar-row{display:grid;grid-template-columns:75px 1fr 85px;gap:8px;align-items:center;margin:13px 0;font-size:12px}
-.bar-bg{height:13px;background:#e8edf5;border-radius:20px;overflow:hidden}
-.bar{height:100%;background:#2563eb;border-radius:20px}
-.empty{color:#94a3b8;text-align:center;padding:15px}
-.profit{color:#059669!important}
-.loss{color:#dc2626!important}
-@media(max-width:500px){body{padding:10px}}
+body{margin:0;background:#f3f5f9;color:#202938;font-family:Tahoma,Arial,sans-serif}
+header{background:#172554;color:white;padding:20px;text-align:center}
+main{max-width:850px;margin:20px auto;padding:15px}
+.card{background:white;border-radius:13px;padding:18px;margin-bottom:15px;box-shadow:0 2px 10px #0000000b}
+input,button{width:100%;padding:13px;margin:6px 0;border-radius:8px;border:1px solid #d4d9e2;font-size:15px}
+button{background:#2563eb;color:white;border:0;cursor:pointer}
+button.danger{background:#dc2626}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:15px}
+nav button{width:auto;flex:1;min-width:100px}
+.item{border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;gap:10px}
+.small{font-size:12px;color:#64748b}
+.hidden{display:none}
+h3{margin-top:0}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+</head>
 <body>
-<div class="container">
 <header>
-<h1>مشتریار</h1>
-<p>مدیریت مشتریان، سفارش‌ها، فروش و حسابداری فروشگاه</p>
+<h2>مشتریار</h2>
+<div>مدیریت مشتریان و فروش</div>
 </header>
-
-<div class="stats">
-<div class="stat"><small>تعداد مشتریان</small><strong id="customerCount">۰</strong></div>
-<div class="stat"><small>مجموع فروش</small><strong id="totalSales">۰</strong></div>
-<div class="stat"><small>مجموع هزینه‌ها</small><strong id="totalExpenses">۰</strong></div>
-<div class="stat"><small>سود خالص</small><strong id="netProfit">۰</strong></div>
-</div>
-
-<section class="panel">
-<h2>گزارش فروش</h2>
-<div class="stats">
-<div class="stat"><small>فروش امروز</small><strong id="dailySales">۰</strong></div>
-<div class="stat"><small>فروش این ماه</small><strong id="monthlySales">۰</strong></div>
-<div class="stat"><small>سفارش تکمیل‌شده</small><strong id="completedCount">۰</strong></div>
-<div class="stat"><small>سفارش در انتظار</small><strong id="pendingCount">۰</strong></div>
-</div>
-<h2>نمودار فروش ۶ ماه اخیر</h2>
-<div id="chart"></div>
+<main>
+<section id="auth" class="card">
+<h3>ورود به مشتریار</h3>
+<input id="email" type="email" placeholder="ایمیل">
+<input id="password" type="password" placeholder="رمز عبور">
+<button onclick="signUp()">ثبت‌نام</button>
+<button onclick="signIn()">ورود</button>
+<p id="authMsg" class="small"></p>
 </section>
 
-<section class="panel">
-<h2>ثبت مشتری</h2>
-<input id="customerName" placeholder="نام مشتری">
-<input id="customerPhone" placeholder="شماره تلفن">
+<section id="app" class="hidden">
+<div class="card">
+سلام، خوش آمدی
+<button onclick="signOut()">خروج از حساب</button>
+</div>
+<nav>
+<button onclick="tab('customers')">مشتریان</button>
+<button onclick="tab('sales')">فروش</button>
+<button onclick="tab('orders')">سفارش‌ها</button>
+<button onclick="tab('expenses')">هزینه‌ها</button>
+<button onclick="tab('reports')">گزارش‌ها</button>
+</nav>
+
+<div id="customers" class="card">
+<h3>ثبت مشتری</h3>
+<input id="cname" placeholder="نام مشتری">
+<input id="cphone" placeholder="شماره تماس">
 <button onclick="addCustomer()">ثبت مشتری</button>
-</section>
+<div id="customerList"></div>
+</div>
 
-<section class="panel">
-<h2>فهرست مشتریان</h2>
-<input id="search" placeholder="جستجوی نام یا شماره..." oninput="renderCustomers()">
-<div id="customersList"></div>
-</section>
+<div id="sales" class="card hidden">
+<h3>ثبت فروش</h3>
+<input id="sname" placeholder="نام مشتری">
+<input id="samount" type="number" placeholder="مبلغ فروش">
+<button onclick="addSale()">ثبت فروش</button>
+<div id="salesList"></div>
+</div>
 
-<section class="panel">
-<h2>ثبت فروش مستقیم</h2>
-<input id="saleName" placeholder="نام مشتری">
-<input id="saleAmount" type="number" min="1" placeholder="مبلغ فروش به تومان">
-<button class="green" onclick="addSale()">ثبت فروش</button>
-</section>
-
-<section class="panel">
-<h2>ثبت سفارش جدید</h2>
-<select id="orderCustomer"></select>
-<input id="orderAmount" type="number" min="1" placeholder="مبلغ سفارش به تومان">
+<div id="orders" class="card hidden">
+<h3>ثبت سفارش</h3>
+<input id="oname" placeholder="نام مشتری">
+<input id="oamount" type="number" placeholder="مبلغ سفارش">
 <button onclick="addOrder()">ثبت سفارش</button>
-</section>
-
-<section class="panel">
-<h2>فهرست سفارش‌ها</h2>
-<div id="ordersList"></div>
-</section>
-
-<section class="panel">
-<h2>ثبت هزینه جدید</h2>
-<input id="expenseTitle" placeholder="عنوان هزینه؛ مثل اجاره یا خرید کالا">
-<input id="expenseAmount" type="number" min="1" placeholder="مبلغ هزینه به تومان">
-<button class="orange" onclick="addExpense()">ثبت هزینه</button>
-</section>
-
-<section class="panel">
-<h2>فهرست هزینه‌ها</h2>
-<div id="expensesList"></div>
-</section>
-
-<section class="panel">
-<h2>گزارش حسابداری</h2>
-<div class="stats">
-<div class="stat"><small>کل فروش تکمیل‌شده</small><strong id="accountSales">۰</strong></div>
-<div class="stat"><small>کل هزینه‌ها</small><strong id="accountExpenses">۰</strong></div>
-<div class="stat"><small>سود یا زیان خالص</small><strong id="accountProfit">۰</strong></div>
+<div id="orderList"></div>
 </div>
-<p class="muted">سود خالص در این نسخه برابر است با فروش‌های ثبت‌شده منهای هزینه‌های ثبت‌شده. هزینه خرید کالا و سایر هزینه‌ها را باید دستی وارد کنی.</p>
-</section>
+
+<div id="expenses" class="card hidden">
+<h3>ثبت هزینه</h3>
+<input id="etitle" placeholder="عنوان هزینه">
+<input id="eamount" type="number" placeholder="مبلغ هزینه">
+<button onclick="addExpense()">ثبت هزینه</button>
+<div id="expenseList"></div>
 </div>
+
+<div id="reports" class="card hidden">
+<h3>گزارش مالی</h3>
+<p>مجموع فروش: <b id="totalSales">۰</b></p>
+<p>مجموع هزینه: <b id="totalExpenses">۰</b></p>
+<p>سود خالص: <b id="netProfit">۰</b></p>
+</div>
+</section>
+</main>
 
 <script>
-const readData=key=>{try{return JSON.parse(localStorage.getItem(key))||[]}catch(e){return []}};
-let customers=readData("crmCustomers");
-let sales=readData("crmSales");
-let orders=readData("crmOrders");
-let expenses=readData("crmExpenses");
+const SUPABASE_URL="https://yvtzzmvemaltpkmeddnk.supabase.co";
+const SUPABASE_KEY="sb_publishable_8XGT5VOphwKE82YTAqP4Hg_qI3Mdxbh";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-function save(){
-localStorage.setItem("crmCustomers",JSON.stringify(customers));
-localStorage.setItem("crmSales",JSON.stringify(sales));
-localStorage.setItem("crmOrders",JSON.stringify(orders));
-localStorage.setItem("crmExpenses",JSON.stringify(expenses));
-}
-function money(n){return Number(n||0).toLocaleString("fa-IR")+" تومان"}
-function todayISO(){return new Date().toISOString().slice(0,10)}
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+let user=null;
+let customers=[],sales=[],orders=[],expenses=[];
 
-function completedSales(){
-return sales.reduce((a,s)=>a+Number(s.amount||0),0)+
-orders.filter(o=>o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
-}
-function totalExpense(){return expenses.reduce((a,e)=>a+Number(e.amount||0),0)}
+const $=id=>document.getElementById(id);
+const msg=t=>$("authMsg").textContent=t;
+const money=n=>Number(n||0).toLocaleString("fa-IR")+" تومان";
 
-function addCustomer(){
-const name=document.getElementById("customerName").value.trim();
-const phone=document.getElementById("customerPhone").value.trim();
-if(!name||!phone){alert("نام و شماره را وارد کن");return}
-customers.push({id:Date.now(),name,phone});
-save();
-document.getElementById("customerName").value="";
-document.getElementById("customerPhone").value="";
-render();
+async function signUp(){
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ if(!email||password.length<6)return msg("ایمیل و رمز حداقل ۶ حرفی وارد کن");
+ const {data,error}=await db.auth.signUp({email,password});
+ if(error)return msg(error.message);
+ if(data.session){user=data.user;await showApp()}
+ else msg("ثبت‌نام انجام شد. ایمیلت را برای تأیید بررسی کن.");
 }
-function editCustomer(id){
-const c=customers.find(x=>x.id===id);
-if(!c)return;
-const name=prompt("نام جدید:",c.name);
-if(name===null||!name.trim())return;
-const phone=prompt("شماره جدید:",c.phone);
-if(phone===null)return;
-c.name=name.trim();c.phone=phone.trim();
-save();render();
+
+async function signIn(){
+ const {data,error}=await db.auth.signInWithPassword({
+  email:$("email").value.trim(),password:$("password").value
+ });
+ if(error)return msg(error.message);
+ user=data.user;
+ await showApp();
 }
-function deleteCustomer(id){
-if(!confirm("مشتری حذف شود؟"))return;
-customers=customers.filter(c=>c.id!==id);
-save();render();
+
+async function signOut(){
+ await db.auth.signOut();
+ user=null;
+ $("app").classList.add("hidden");
+ $("auth").classList.remove("hidden");
 }
-function renderCustomers(){
-const q=document.getElementById("search").value.trim().toLowerCase();
-const list=customers.filter(c=>(c.name+" "+c.phone).toLowerCase().includes(q));
-document.getElementById("customersList").innerHTML=list.length?list.map(c=>`
-<div class="item">
-<div><strong>${esc(c.name)}</strong><div class="muted">${esc(c.phone)}</div></div>
-<div><button class="gray" onclick="editCustomer(${Number(c.id)})">ویرایش</button>
-<button class="danger" onclick="deleteCustomer(${Number(c.id)})">حذف</button></div>
-</div>`).join(""):'<div class="empty">مشتری‌ای پیدا نشد</div>';
+
+async function showApp(){
+ $("auth").classList.add("hidden");
+ $("app").classList.remove("hidden");
+ await loadData();
 }
-function addSale(){
-const name=document.getElementById("saleName").value.trim();
-const amount=Number(document.getElementById("saleAmount").value);
-if(!name||!amount||amount<=0){alert("نام و مبلغ معتبر وارد کن");return}
-sales.push({name,amount,dateISO:todayISO()});
-save();
-document.getElementById("saleName").value="";
-document.getElementById("saleAmount").value="";
-render();alert("فروش ثبت شد");
+
+async function loadData(){
+ for(const [table,key] of [["customers","customers"],["sales","sales"],["orders","orders"],["expenses","expenses"]]){
+  const {data,error}=await db.from(table).select("*").order("created_at",{ascending:false});
+  if(error){alert("خطا در دریافت "+table+": "+error.message);return}
+  if(key==="customers")customers=data;
+  if(key==="sales")sales=data;
+  if(key==="orders")orders=data;
+  if(key==="expenses")expenses=data;
+ }
+ render();
 }
-function addOrder(){
-const id=Number(document.getElementById("orderCustomer").value);
-const c=customers.find(x=>Number(x.id)===id);
-const amount=Number(document.getElementById("orderAmount").value);
-if(!c){alert("ابتدا مشتری انتخاب کن");return}
-if(!amount||amount<=0){alert("مبلغ معتبر وارد کن");return}
-orders.push({id:Date.now(),customerId:c.id,name:c.name,amount,status:"در انتظار",date:new Date().toLocaleDateString("fa-IR"),dateISO:todayISO()});
-save();
-document.getElementById("orderAmount").value="";
-render();alert("سفارش ثبت شد");
+
+async function addRow(table,row){
+ const {error}=await db.from(table).insert({...row,owner_id:user.id});
+ if(error){alert(error.message);return}
+ await loadData();
 }
-function changeStatus(id){
-const o=orders.find(x=>x.id===id);
-if(!o)return;
-const statuses=["در انتظار","در حال انجام","تکمیل شده"];
-o.status=statuses[(statuses.indexOf(o.status)+1)%statuses.length];
-save();render();
+
+async function addCustomer(){
+ const name=$("cname").value.trim();
+ if(!name)return alert("نام مشتری را وارد کن");
+ await addRow("customers",{name,phone:$("cphone").value.trim()});
+ $("cname").value="";$("cphone").value="";
 }
-function deleteOrder(id){
-if(!confirm("سفارش حذف شود؟"))return;
-orders=orders.filter(o=>o.id!==id);
-save();render();
+
+async function addSale(){
+ const customer_name=$("sname").value.trim();
+ const amount=Number($("samount").value);
+ if(!customer_name||amount<=0)return alert("نام و مبلغ معتبر وارد کن");
+ await addRow("sales",{customer_name,amount});
+ $("sname").value="";$("samount").value="";
 }
-function addExpense(){
-const title=document.getElementById("expenseTitle").value.trim();
-const amount=Number(document.getElementById("expenseAmount").value);
-if(!title||!amount||amount<=0){alert("عنوان و مبلغ معتبر وارد کن");return}
-expenses.push({id:Date.now(),title,amount,dateISO:todayISO(),date:new Date().toLocaleDateString("fa-IR")});
-save();
-document.getElementById("expenseTitle").value="";
-document.getElementById("expenseAmount").value="";
-render();alert("هزینه ثبت شد");
+
+async function addOrder(){
+ const customer_name=$("oname").value.trim();
+ const amount=Number($("oamount").value);
+ if(!customer_name||amount<=0)return alert("نام و مبلغ معتبر وارد کن");
+ await addRow("orders",{customer_name,amount,status:"در انتظار"});
+ $("oname").value="";$("oamount").value="";
 }
-function deleteExpense(id){
-if(!confirm("این هزینه حذف شود؟"))return;
-expenses=expenses.filter(e=>e.id!==id);
-save();render();
+
+async function addExpense(){
+ const title=$("etitle").value.trim();
+ const amount=Number($("eamount").value);
+ if(!title||amount<=0)return alert("عنوان و مبلغ معتبر وارد کن");
+ await addRow("expenses",{title,amount});
+ $("etitle").value="";$("eamount").value="";
 }
-function renderExpenses(){
-const el=document.getElementById("expensesList");
-el.innerHTML=expenses.length?expenses.map(e=>`
-<div class="item">
-<div><strong>${esc(e.title)}</strong><div>${money(e.amount)}</div><div class="muted">${esc(e.date)}</div></div>
-<button class="danger" onclick="deleteExpense(${Number(e.id)})">حذف</button>
-</div>`).join(""):'<div class="empty">هنوز هزینه‌ای ثبت نشده است</div>';
+
+async function removeRow(table,id){
+ if(!confirm("از حذف مطمئنی؟"))return;
+ const {error}=await db.from(table).delete().eq("id",id);
+ if(error){alert(error.message);return}
+ await loadData();
 }
-function renderSelect(){
-document.getElementById("orderCustomer").innerHTML=customers.length?
-customers.map(c=>`<option value="${Number(c.id)}">${esc(c.name)}</option>`).join(""):'<option value="">ابتدا مشتری ثبت کن</option>';
+
+function tab(id){
+ ["customers","sales","orders","expenses","reports"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
 }
-function renderOrders(){
-document.getElementById("ordersList").innerHTML=orders.length?orders.map(o=>`
-<div class="item">
-<div><strong>${esc(o.name)}</strong><div>${money(o.amount)}</div>
-<div class="muted">${esc(o.date||"")}</div><span class="status">${esc(o.status)}</span></div>
-<div><button class="orange" onclick="changeStatus(${Number(o.id)})">تغییر وضعیت</button>
-<button class="danger" onclick="deleteOrder(${Number(o.id)})">حذف</button></div>
-</div>`).join(""):'<div class="empty">هنوز سفارشی ثبت نشده است</div>';
-}
-function renderReports(){
-const today=todayISO(),month=today.slice(0,7);
-const ds=sales.filter(s=>s.dateISO);
-const os=orders.filter(o=>o.dateISO);
-const daily=ds.filter(s=>s.dateISO===today).reduce((a,s)=>a+Number(s.amount||0),0)+os.filter(o=>o.dateISO===today&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
-const monthly=ds.filter(s=>s.dateISO.startsWith(month)).reduce((a,s)=>a+Number(s.amount||0),0)+os.filter(o=>o.dateISO.startsWith(month)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
-document.getElementById("dailySales").textContent=money(daily);
-document.getElementById("monthlySales").textContent=money(monthly);
-const months=[],now=new Date();
-for(let i=5;i>=0;i--){
-const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-months.push({key:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"),label:d.toLocaleDateString("fa-IR",{month:"short"}),value:0});
-}
-months.forEach(m=>{
-m.value=ds.filter(s=>s.dateISO.startsWith(m.key)).reduce((a,s)=>a+Number(s.amount||0),0)+os.filter(o=>o.dateISO.startsWith(m.key)&&o.status==="تکمیل شده").reduce((a,o)=>a+Number(o.amount||0),0);
-});
-const max=Math.max(1,...months.map(m=>m.value));
-document.getElementById("chart").innerHTML=months.map(m=>`
-<div class="bar-row"><span>${m.label}</span><div class="bar-bg"><div class="bar" style="width:${m.value/max*100}%"></div></div><strong>${m.value.toLocaleString("fa-IR")}</strong></div>`).join("");
-}
+
 function render(){
-const s=completedSales(),e=totalExpense(),profit=s-e;
-document.getElementById("customerCount").textContent=customers.length.toLocaleString("fa-IR");
-document.getElementById("totalSales").textContent=money(s);
-document.getElementById("totalExpenses").textContent=money(e);
-document.getElementById("netProfit").textContent=money(profit);
-document.getElementById("netProfit").className=profit<0?"loss":"profit";
-document.getElementById("completedCount").textContent=orders.filter(o=>o.status==="تکمیل شده").length.toLocaleString("fa-IR");
-document.getElementById("pendingCount").textContent=orders.filter(o=>o.status==="در انتظار").length.toLocaleString("fa-IR");
-document.getElementById("accountSales").textContent=money(s);
-document.getElementById("accountExpenses").textContent=money(e);
-document.getElementById("accountProfit").textContent=money(profit);
-document.getElementById("accountProfit").className=profit<0?"loss":"profit";
-renderCustomers();renderOrders();renderExpenses();renderSelect();renderReports();
+ $("customerList").innerHTML=customers.map(x=>`<div class="item"><span>${esc(x.name)} - ${esc(x.phone||"")}</span><button class="danger" style="width:auto" onclick="removeRow('customers','${x.id}')">حذف</button></div>`).join("");
+ $("salesList").innerHTML=sales.map(x=>`<div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)}</span><button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button></div>`).join("");
+ $("orderList").innerHTML=orders.map(x=>`<div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)} (${esc(x.status)})</span><button class="danger" style="width:auto" onclick="removeRow('orders','${x.id}')">حذف</button></div>`).join("");
+ $("expenseList").innerHTML=expenses.map(x=>`<div class="item"><span>${esc(x.title)} - ${money(x.amount)}</span><button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button></div>`).join("");
+ const s=sales.reduce((a,x)=>a+Number(x.amount),0);
+ const e=expenses.reduce((a,x)=>a+Number(x.amount),0);
+ $("totalSales").textContent=money(s);
+ $("totalExpenses").textContent=money(e);
+ $("netProfit").textContent=money(s-e);
 }
-render();
+
+function esc(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+db.auth.onAuthStateChange((event,session)=>{
+ if(session?.user){user=session.user;showApp()}
+ else if(event==="SIGNED_OUT"){
+  user=null;
+  $("app").classList.add("hidden");
+  $("auth").classList.remove("hidden");
+ }
+});
+
+db.auth.getSession().then(({data})=>{
+ if(data.session?.user){user=data.session.user;showApp()}
+});
 </script>
 </body>
 </html>
