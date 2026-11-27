@@ -14,9 +14,12 @@ main{max-width:850px;margin:20px auto;padding:15px}
 input,button{width:100%;padding:13px;margin:6px 0;border-radius:8px;border:1px solid #d4d9e2;font-size:15px}
 button{background:#2563eb;color:white;border:0;cursor:pointer}
 button.danger{background:#dc2626}
+button.edit{background:#0f766e}
 nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:15px}
 nav button{width:auto;flex:1;min-width:100px}
-.item{border-bottom:1px solid #eee;padding:12px 0;display:flex;justify-content:space-between;gap:10px}
+.item{border-bottom:1px solid #eee;padding:12px 0;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.actions{display:flex;gap:5px}
+.actions button{width:auto;margin:0;padding:8px 12px}
 .small{font-size:12px;color:#64748b}
 .hidden{display:none}
 h3{margin-top:0}
@@ -42,6 +45,7 @@ h3{margin-top:0}
 سلام، خوش آمدی
 <button onclick="signOut()">خروج از حساب</button>
 </div>
+
 <nav>
 <button onclick="tab('customers')">مشتریان</button>
 <button onclick="tab('sales')">فروش</button>
@@ -98,7 +102,6 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let user=null;
 let customers=[],sales=[],orders=[],expenses=[];
-
 const $=id=>document.getElementById(id);
 const msg=t=>$("authMsg").textContent=t;
 const money=n=>Number(n||0).toLocaleString("fa-IR")+" تومان";
@@ -115,7 +118,8 @@ async function signUp(){
 
 async function signIn(){
  const {data,error}=await db.auth.signInWithPassword({
-  email:$("email").value.trim(),password:$("password").value
+  email:$("email").value.trim(),
+  password:$("password").value
  });
  if(error)return msg(error.message);
  user=data.user;
@@ -136,54 +140,76 @@ async function showApp(){
 }
 
 async function loadData(){
- for(const [table,key] of [["customers","customers"],["sales","sales"],["orders","orders"],["expenses","expenses"]]){
+ for(const table of ["customers","sales","orders","expenses"]){
   const {data,error}=await db.from(table).select("*").order("created_at",{ascending:false});
-  if(error){alert("خطا در دریافت "+table+": "+error.message);return}
-  if(key==="customers")customers=data;
-  if(key==="sales")sales=data;
-  if(key==="orders")orders=data;
-  if(key==="expenses")expenses=data;
+  if(error){alert("خطا در دریافت اطلاعات: "+error.message);return}
+  if(table==="customers")customers=data;
+  if(table==="sales")sales=data;
+  if(table==="orders")orders=data;
+  if(table==="expenses")expenses=data;
  }
  render();
 }
 
+/* ثبت اطلاعات */
 async function addRow(table,row){
  const {error}=await db.from(table).insert({...row,owner_id:user.id});
- if(error){alert(error.message);return}
+ if(error){alert(error.message);return false}
  await loadData();
+ return true;
 }
 
 async function addCustomer(){
  const name=$("cname").value.trim();
  if(!name)return alert("نام مشتری را وارد کن");
- await addRow("customers",{name,phone:$("cphone").value.trim()});
- $("cname").value="";$("cphone").value="";
+ const ok=await addRow("customers",{name,phone:$("cphone").value.trim()});
+ if(ok){$("cname").value="";$("cphone").value=""}
+}
+
+/* ویرایش مشتری */
+async function editCustomer(id){
+ const customer=customers.find(x=>x.id===id);
+ if(!customer)return;
+ const name=prompt("نام جدید مشتری:",customer.name);
+ if(name===null)return;
+ if(!name.trim())return alert("نام مشتری نمی‌تواند خالی باشد");
+ const phone=prompt("شماره تماس جدید:",customer.phone||"");
+ if(phone===null)return;
+
+ const {error}=await db.from("customers")
+  .update({name:name.trim(),phone:phone.trim()})
+  .eq("id",id);
+
+ if(error){alert("خطا در ویرایش: "+error.message);return}
+ alert("اطلاعات مشتری ویرایش شد");
+ await loadData();
 }
 
 async function addSale(){
  const customer_name=$("sname").value.trim();
  const amount=Number($("samount").value);
  if(!customer_name||amount<=0)return alert("نام و مبلغ معتبر وارد کن");
- await addRow("sales",{customer_name,amount});
- $("sname").value="";$("samount").value="";
+ const ok=await addRow("sales",{customer_name,amount});
+ if(ok){$("sname").value="";$("samount").value=""}
 }
 
 async function addOrder(){
  const customer_name=$("oname").value.trim();
  const amount=Number($("oamount").value);
  if(!customer_name||amount<=0)return alert("نام و مبلغ معتبر وارد کن");
- await addRow("orders",{customer_name,amount,status:"در انتظار"});
- $("oname").value="";$("oamount").value="";
+ const ok=await addRow("orders",{customer_name,amount,status:"در انتظار"});
+ if(ok){$("oname").value="";$("oamount").value=""}
 }
 
 async function addExpense(){
  const title=$("etitle").value.trim();
  const amount=Number($("eamount").value);
  if(!title||amount<=0)return alert("عنوان و مبلغ معتبر وارد کن");
- await addRow("expenses",{title,amount});
- $("etitle").value="";$("eamount").value="";
+ const ok=await addRow("expenses",{title,amount});
+ if(ok){$("etitle").value="";$("eamount").value=""}
 }
 
+/* حذف اطلاعات */
 async function removeRow(table,id){
  if(!confirm("از حذف مطمئنی؟"))return;
  const {error}=await db.from(table).delete().eq("id",id);
@@ -192,14 +218,39 @@ async function removeRow(table,id){
 }
 
 function tab(id){
- ["customers","sales","orders","expenses","reports"].forEach(x=>$(x).classList.toggle("hidden",x!==id));
+ ["customers","sales","orders","expenses","reports"].forEach(x=>{
+  $(x).classList.toggle("hidden",x!==id);
+ });
 }
 
 function render(){
- $("customerList").innerHTML=customers.map(x=>`<div class="item"><span>${esc(x.name)} - ${esc(x.phone||"")}</span><button class="danger" style="width:auto" onclick="removeRow('customers','${x.id}')">حذف</button></div>`).join("");
- $("salesList").innerHTML=sales.map(x=>`<div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)}</span><button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button></div>`).join("");
- $("orderList").innerHTML=orders.map(x=>`<div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)} (${esc(x.status)})</span><button class="danger" style="width:auto" onclick="removeRow('orders','${x.id}')">حذف</button></div>`).join("");
- $("expenseList").innerHTML=expenses.map(x=>`<div class="item"><span>${esc(x.title)} - ${money(x.amount)}</span><button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button></div>`).join("");
+ $("customerList").innerHTML=customers.map(x=>`
+ <div class="item">
+ <span>${esc(x.name)} - ${esc(x.phone||"")}</span>
+ <div class="actions">
+ <button class="edit" onclick="editCustomer('${x.id}')">ویرایش</button>
+ <button class="danger" onclick="removeRow('customers','${x.id}')">حذف</button>
+ </div>
+ </div>`).join("");
+
+ $("salesList").innerHTML=sales.map(x=>`
+ <div class="item">
+ <span>${esc(x.customer_name)} - ${money(x.amount)}</span>
+ <button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button>
+ </div>`).join("");
+
+ $("orderList").innerHTML=orders.map(x=>`
+ <div class="item">
+ <span>${esc(x.customer_name)} - ${money(x.amount)} (${esc(x.status)})</span>
+ <button class="danger" style="width:auto" onclick="removeRow('orders','${x.id}')">حذف</button>
+ </div>`).join("");
+
+ $("expenseList").innerHTML=expenses.map(x=>`
+ <div class="item">
+ <span>${esc(x.title)} - ${money(x.amount)}</span>
+ <button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button>
+ </div>`).join("");
+
  const s=sales.reduce((a,x)=>a+Number(x.amount),0);
  const e=expenses.reduce((a,x)=>a+Number(x.amount),0);
  $("totalSales").textContent=money(s);
@@ -208,12 +259,16 @@ function render(){
 }
 
 function esc(s){
- return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ return String(s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
 }
 
 db.auth.onAuthStateChange((event,session)=>{
- if(session?.user){user=session.user;showApp()}
- else if(event==="SIGNED_OUT"){
+ if(session?.user){
+  user=session.user;
+  if($("app").classList.contains("hidden"))showApp();
+ }else if(event==="SIGNED_OUT"){
   user=null;
   $("app").classList.add("hidden");
   $("auth").classList.remove("hidden");
@@ -221,8 +276,11 @@ db.auth.onAuthStateChange((event,session)=>{
 });
 
 db.auth.getSession().then(({data})=>{
- if(data.session?.user){user=data.session.user;showApp()}
+ if(data.session?.user){
+  user=data.session.user;
+  showApp();
+ }
 });
 </script>
 </body>
-</html>
+ </html>
