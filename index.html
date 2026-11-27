@@ -4,35 +4,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>مشتریار</title>
+<title>مشتریار | مدیریت کسب‌وکار</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f1f5f9;color:#1e293b;font-family:Tahoma,Arial}
 header{background:#172554;color:white;text-align:center;padding:22px}
-main{max-width:950px;margin:20px auto;padding:14px}
+main{max-width:1000px;margin:20px auto;padding:14px}
 .card{background:white;border-radius:14px;padding:17px;margin-bottom:15px;box-shadow:0 2px 10px #0001}
 input,select,button{width:100%;padding:13px;margin:6px 0;border:1px solid #dbe2ea;border-radius:9px;font-size:15px}
 button{background:#2563eb;color:white;border:0;cursor:pointer}
+button:disabled{opacity:.5}
 .danger{background:#dc2626}
 .edit{background:#0f766e}
+.export{background:#15803d}
+.backup{background:#7c3aed}
 nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
-nav button{flex:1;min-width:95px}
-.item{padding:12px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.actions{display:flex;gap:5px;flex-wrap:wrap}
-.actions button{width:auto;padding:8px 11px}
+nav button{flex:1;min-width:100px}
+.item{padding:13px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.actions{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.actions button{width:auto;padding:9px 11px}
+.actions select{width:auto;max-width:150px;margin:0}
 .hidden{display:none}
 .small{font-size:12px;color:#64748b}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.stat{background:#eff6ff;border-radius:10px;padding:14px;text-align:center}
-.stat b{display:block;margin-top:8px}
+.stat{background:#eff6ff;border-radius:10px;padding:15px;text-align:center}
+.stat b{display:block;margin-top:9px;font-size:17px}
+hr{border:0;border-top:1px solid #eee;margin:18px 0}
+h3{margin-top:5px}
+.status{font-size:12px;color:#64748b;margin-top:5px}
 </style>
 </head>
 <body>
+
 <header>
 <h2>مشتریار</h2>
 <div>مدیریت هوشمند مشتریان و فروش</div>
 </header>
+
 <main>
 
 <section id="auth" class="card">
@@ -45,6 +55,7 @@ nav button{flex:1;min-width:95px}
 </section>
 
 <section id="app" class="hidden">
+
 <div class="card">
 سلام، خوش آمدی
 <button onclick="signOut()">خروج از حساب</button>
@@ -60,14 +71,19 @@ nav button{flex:1;min-width:95px}
 </nav>
 
 <div id="dashboard" class="card">
-<h3>داشبورد مشتریار</h3>
+<h3>داشبورد کسب‌وکار</h3>
 <div class="stats">
-<div class="stat">تعداد مشتریان<b id="dashCustomers">۰</b></div>
-<div class="stat">تعداد سفارش‌ها<b id="dashOrders">۰</b></div>
-<div class="stat">مجموع فروش<b id="dashSales">۰</b></div>
-<div class="stat">مجموع هزینه<b id="dashExpenses">۰</b></div>
+<div class="stat">مشتریان<b id="dashCustomers">۰</b></div>
+<div class="stat">سفارش‌ها<b id="dashOrders">۰</b></div>
+<div class="stat">فروش<b id="dashSales">۰</b></div>
+<div class="stat">هزینه<b id="dashExpenses">۰</b></div>
 <div class="stat">سود خالص<b id="dashProfit">۰</b></div>
 </div>
+<hr>
+<h3>پشتیبان و خروجی اطلاعات</h3>
+<button class="export" onclick="exportExcel()">دریافت فایل اکسل</button>
+<button class="backup" onclick="exportBackup()">دریافت فایل پشتیبان JSON</button>
+<p class="small">فایل پشتیبان شامل اطلاعات مشتریان، فروش، سفارش‌ها و هزینه‌هاست.</p>
 </div>
 
 <div id="customers" class="card hidden">
@@ -99,7 +115,7 @@ nav button{flex:1;min-width:95px}
 <button onclick="addOrder()">ثبت سفارش</button>
 <hr>
 <h3>جست‌وجوی سفارش‌ها</h3>
-<input id="searchOrder" placeholder="نام مشتری یا مبلغ سفارش" oninput="renderOrders()">
+<input id="searchOrder" placeholder="نام مشتری یا مبلغ" oninput="renderOrders()">
 <select id="orderStatusFilter" onchange="renderOrders()">
 <option value="">همه وضعیت‌ها</option>
 <option value="در انتظار">در انتظار</option>
@@ -117,7 +133,7 @@ nav button{flex:1;min-width:95px}
 <button onclick="addExpense()">ثبت هزینه</button>
 <hr>
 <h3>جست‌وجوی هزینه</h3>
-<input id="searchExpense" placeholder="عنوان هزینه" oninput="renderExpenses()">
+<input id="searchExpense" placeholder="عنوان هزینه یا مبلغ" oninput="renderExpenses()">
 <div id="expenseList"></div>
 </div>
 
@@ -128,7 +144,11 @@ nav button{flex:1;min-width:95px}
 <p>سود خالص: <b id="netProfit">۰</b></p>
 <p>تعداد مشتریان: <b id="totalCustomers">۰</b></p>
 <p>تعداد سفارش‌ها: <b id="totalOrders">۰</b></p>
+<hr>
+<button class="export" onclick="exportExcel()">دریافت گزارش اکسل</button>
+<button class="backup" onclick="exportBackup()">دریافت پشتیبان اطلاعات</button>
 </div>
+
 </section>
 </main>
 
@@ -140,29 +160,43 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let user=null;
 let customers=[],sales=[],orders=[],expenses=[];
 let loading=false;
+
 const $=id=>document.getElementById(id);
 const money=n=>Number(n||0).toLocaleString("fa-IR")+" تومان";
 const number=n=>Number(n||0).toLocaleString("fa-IR");
 const msg=t=>$("authMsg").textContent=t;
 
+function esc(s){
+ return String(s??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
 async function signUp(){
  const email=$("email").value.trim();
  const password=$("password").value;
- if(!email||password.length<6)return msg("ایمیل و رمز حداقل ۶ کاراکتری وارد کن");
+ if(!email||password.length<6)
+  return msg("ایمیل و رمز حداقل ۶ کاراکتری وارد کن");
+
  const {data,error}=await db.auth.signUp({email,password});
  if(error)return msg("خطا: "+error.message);
+
  if(data.session){
   user=data.user;
   await showApp();
- }else msg("ثبت‌نام انجام شد؛ ایمیلت را برای تأیید بررسی کن.");
+ }else{
+  msg("ثبت‌نام انجام شد؛ ایمیلت را برای تأیید بررسی کن.");
+ }
 }
 
 async function signIn(){
  const email=$("email").value.trim();
  const password=$("password").value;
  if(!email||!password)return msg("ایمیل و رمز عبور را وارد کن");
+
  const {data,error}=await db.auth.signInWithPassword({email,password});
  if(error)return msg("خطا: "+error.message);
+
  user=data.user;
  await showApp();
 }
@@ -170,6 +204,7 @@ async function signIn(){
 async function signOut(){
  await db.auth.signOut();
  user=null;
+ customers=[];sales=[];orders=[];expenses=[];
  $("app").classList.add("hidden");
  $("auth").classList.remove("hidden");
 }
@@ -185,156 +220,315 @@ async function showApp(){
 
 async function loadData(){
  const tables=["customers","sales","orders","expenses"];
- for(const table of tables){
-  const {data,error}=await db.from(table).select("*").order("created_at",{ascending:false});
-  if(error){
-   alert("خطا در دریافت اطلاعات "+table+": "+error.message);
+ const results=await Promise.all(
+  tables.map(table=>
+   db.from(table).select("*").order("created_at",{ascending:false})
+  )
+ );
+
+ for(let i=0;i<tables.length;i++){
+  if(results[i].error){
+   alert("خطا در دریافت "+tables[i]+": "+results[i].error.message);
    return false;
   }
-  if(table==="customers")customers=data||[];
-  if(table==="sales")sales=data||[];
-  if(table==="orders")orders=data||[];
-  if(table==="expenses")expenses=data||[];
  }
+
+ customers=results[0].data||[];
+ sales=results[1].data||[];
+ orders=results[2].data||[];
+ expenses=results[3].data||[];
+
  render();
  return true;
 }
 
 async function addRow(table,row){
  if(!user)return alert("ابتدا وارد حساب شو");
- const {error}=await db.from(table).insert({...row,owner_id:user.id});
+
+ const {error}=await db.from(table).insert({
+  ...row,
+  owner_id:user.id
+ });
+
  if(error){
   alert("خطا در ثبت: "+error.message);
   return false;
  }
+
  await loadData();
+ return true;
+}
+
+async function updateRow(table,id,changes){
+ const {error}=await db.from(table)
+  .update(changes).eq("id",id);
+
+ if(error){
+  alert("خطا در ویرایش: "+error.message);
+  return false;
+ }
+
+ await loadData();
+ alert("اطلاعات با موفقیت ویرایش شد");
  return true;
 }
 
 async function addCustomer(){
  const name=$("cname").value.trim();
  const phone=$("cphone").value.trim();
+
  if(!name)return alert("نام مشتری را وارد کن");
+
  const ok=await addRow("customers",{name,phone});
- if(ok){$("cname").value="";$("cphone").value=""}
+ if(ok){
+  $("cname").value="";
+  $("cphone").value="";
+ }
 }
 
 async function editCustomer(id){
  const c=customers.find(x=>x.id===id);
  if(!c)return;
+
  const name=prompt("نام جدید:",c.name);
  if(name===null)return;
  if(!name.trim())return alert("نام نمی‌تواند خالی باشد");
+
  const phone=prompt("شماره تماس جدید:",c.phone||"");
  if(phone===null)return;
- const {error}=await db.from("customers")
-  .update({name:name.trim(),phone:phone.trim()}).eq("id",id);
- if(error)return alert(error.message);
- await loadData();
- alert("مشتری ویرایش شد");
+
+ await updateRow("customers",id,{
+  name:name.trim(),
+  phone:phone.trim()
+ });
 }
 
 async function addSale(){
  const customer_name=$("sname").value.trim();
  const amount=Number($("samount").value);
- if(!customer_name||amount<=0)return alert("نام و مبلغ معتبر وارد کن");
+
+ if(!customer_name||amount<=0)
+  return alert("نام و مبلغ معتبر وارد کن");
+
  const ok=await addRow("sales",{customer_name,amount});
- if(ok){$("sname").value="";$("samount").value=""}
+ if(ok){
+  $("sname").value="";
+  $("samount").value="";
+ }
+}
+
+async function editSale(id){
+ const x=sales.find(v=>v.id===id);
+ if(!x)return;
+
+ const name=prompt("نام مشتری:",x.customer_name);
+ if(name===null)return;
+ if(!name.trim())return alert("نام مشتری را وارد کن");
+
+ const amount=prompt("مبلغ فروش:",x.amount);
+ if(amount===null)return;
+ if(!Number.isFinite(Number(amount))||Number(amount)<=0)
+  return alert("مبلغ معتبر وارد کن");
+
+ await updateRow("sales",id,{
+  customer_name:name.trim(),
+  amount:Number(amount)
+ });
 }
 
 async function addOrder(){
  const customer_name=$("oname").value.trim();
  const amount=Number($("oamount").value);
- if(!customer_name||amount<=0)return alert("نام و مبلغ معتبر وارد کن");
- const ok=await addRow("orders",{customer_name,amount,status:"در انتظار"});
- if(ok){$("oname").value="";$("oamount").value=""}
+
+ if(!customer_name||amount<=0)
+  return alert("نام و مبلغ معتبر وارد کن");
+
+ const ok=await addRow("orders",{
+  customer_name,amount,status:"در انتظار"
+ });
+
+ if(ok){
+  $("oname").value="";
+  $("oamount").value="";
+ }
+}
+
+async function editOrder(id){
+ const x=orders.find(v=>v.id===id);
+ if(!x)return;
+
+ const name=prompt("نام مشتری:",x.customer_name);
+ if(name===null)return;
+ if(!name.trim())return alert("نام مشتری را وارد کن");
+
+ const amount=prompt("مبلغ سفارش:",x.amount);
+ if(amount===null)return;
+ if(!Number.isFinite(Number(amount))||Number(amount)<=0)
+  return alert("مبلغ معتبر وارد کن");
+
+ const statuses=["در انتظار","در حال انجام","تکمیل شده","لغو شده"];
+ const status=prompt(
+  "وضعیت را دقیقاً وارد کن:\n"+statuses.join("، "),
+  x.status||"در انتظار"
+ );
+ if(status===null)return;
+ if(!statuses.includes(status.trim()))
+  return alert("وضعیت معتبر نیست");
+
+ await updateRow("orders",id,{
+  customer_name:name.trim(),
+  amount:Number(amount),
+  status:status.trim()
+ });
 }
 
 async function changeOrderStatus(id,status){
- const {error}=await db.from("orders").update({status}).eq("id",id);
+ const allowed=["در انتظار","در حال انجام","تکمیل شده","لغو شده"];
+ if(!allowed.includes(status))return alert("وضعیت معتبر نیست");
+
+ const {error}=await db.from("orders")
+  .update({status}).eq("id",id);
+
  if(error)return alert("خطا در تغییر وضعیت: "+error.message);
+
  await loadData();
 }
 
 async function addExpense(){
  const title=$("etitle").value.trim();
  const amount=Number($("eamount").value);
- if(!title||amount<=0)return alert("عنوان و مبلغ معتبر وارد کن");
+
+ if(!title||amount<=0)
+  return alert("عنوان و مبلغ معتبر وارد کن");
+
  const ok=await addRow("expenses",{title,amount});
- if(ok){$("etitle").value="";$("eamount").value=""}
+ if(ok){
+  $("etitle").value="";
+  $("eamount").value="";
+ }
+}
+
+async function editExpense(id){
+ const x=expenses.find(v=>v.id===id);
+ if(!x)return;
+
+ const title=prompt("عنوان هزینه:",x.title);
+ if(title===null)return;
+ if(!title.trim())return alert("عنوان هزینه را وارد کن");
+
+ const amount=prompt("مبلغ هزینه:",x.amount);
+ if(amount===null)return;
+ if(!Number.isFinite(Number(amount))||Number(amount)<=0)
+  return alert("مبلغ معتبر وارد کن");
+
+ await updateRow("expenses",id,{
+  title:title.trim(),
+  amount:Number(amount)
+ });
 }
 
 async function removeRow(table,id){
  if(!confirm("از حذف این مورد مطمئنی؟"))return;
+
  const {error}=await db.from(table).delete().eq("id",id);
+
  if(error)return alert("خطا در حذف: "+error.message);
+
  await loadData();
 }
 
 function renderCustomers(){
  const q=$("searchCustomer").value.trim().toLowerCase();
+
  const filtered=customers.filter(c=>
   (c.name||"").toLowerCase().includes(q)||
   (c.phone||"").toLowerCase().includes(q)
  );
- $("customerList").innerHTML=filtered.length?filtered.map(c=>`
+
+ $("customerList").innerHTML=filtered.length?
+ filtered.map(c=>`
   <div class="item">
    <span>${esc(c.name)} - ${esc(c.phone||"بدون شماره")}</span>
    <div class="actions">
     <button class="edit" onclick="editCustomer('${c.id}')">ویرایش</button>
     <button class="danger" onclick="removeRow('customers','${c.id}')">حذف</button>
    </div>
-  </div>`).join(""):"مشتری پیدا نشد";
+  </div>
+ `).join(""):"مشتری پیدا نشد";
 }
 
 function renderSales(){
  const q=$("searchSale").value.trim().toLowerCase();
+
  const filtered=sales.filter(x=>
   (x.customer_name||"").toLowerCase().includes(q)||
   String(x.amount||"").includes(q)
  );
- $("salesList").innerHTML=filtered.length?filtered.map(x=>`
+
+ $("salesList").innerHTML=filtered.length?
+ filtered.map(x=>`
   <div class="item">
    <span>${esc(x.customer_name)} - ${money(x.amount)}</span>
-   <button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button>
-  </div>`).join(""):"فروشی پیدا نشد";
+   <div class="actions">
+    <button class="edit" onclick="editSale('${x.id}')">ویرایش</button>
+    <button class="danger" onclick="removeRow('sales','${x.id}')">حذف</button>
+   </div>
+  </div>
+ `).join(""):"فروشی پیدا نشد";
 }
 
 function renderOrders(){
  const q=$("searchOrder").value.trim().toLowerCase();
  const status=$("orderStatusFilter").value;
+
  const filtered=orders.filter(x=>
-  ((x.customer_name||"").toLowerCase().includes(q)||
-  String(x.amount||"").includes(q))&&
+  (
+   (x.customer_name||"").toLowerCase().includes(q)||
+   String(x.amount||"").includes(q)
+  )&&
   (!status||(x.status||"در انتظار")===status)
  );
- $("orderList").innerHTML=filtered.length?filtered.map(x=>`
+
+ $("orderList").innerHTML=filtered.length?
+ filtered.map(x=>`
   <div class="item">
    <div>
     <b>${esc(x.customer_name)}</b>
     <div>${money(x.amount)}</div>
-    <div class="small">وضعیت: ${esc(x.status||"در انتظار")}</div>
+    <div class="status">وضعیت: ${esc(x.status||"در انتظار")}</div>
    </div>
    <div class="actions">
-    <select style="width:auto;max-width:150px" onchange="changeOrderStatus('${x.id}',this.value)">
+    <select onchange="changeOrderStatus('${x.id}',this.value)">
      <option value="در انتظار" ${(x.status||"در انتظار")==="در انتظار"?"selected":""}>در انتظار</option>
      <option value="در حال انجام" ${x.status==="در حال انجام"?"selected":""}>در حال انجام</option>
      <option value="تکمیل شده" ${x.status==="تکمیل شده"?"selected":""}>تکمیل شده</option>
      <option value="لغو شده" ${x.status==="لغو شده"?"selected":""}>لغو شده</option>
     </select>
+    <button class="edit" onclick="editOrder('${x.id}')">ویرایش</button>
     <button class="danger" onclick="removeRow('orders','${x.id}')">حذف</button>
    </div>
-  </div>`).join(""):"سفارشی پیدا نشد";
+  </div>
+ `).join(""):"سفارشی پیدا نشد";
 }
 
 function renderExpenses(){
  const q=$("searchExpense").value.trim().toLowerCase();
- const filtered=expenses.filter(x=>(x.title||"").toLowerCase().includes(q));
- $("expenseList").innerHTML=filtered.length?filtered.map(x=>`
+
+ const filtered=expenses.filter(x=>
+  (x.title||"").toLowerCase().includes(q)||
+  String(x.amount||"").includes(q)
+ );
+
+ $("expenseList").innerHTML=filtered.length?
+ filtered.map(x=>`
   <div class="item">
    <span>${esc(x.title)} - ${money(x.amount)}</span>
-   <button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button>
-  </div>`).join(""):"هزینه‌ای پیدا نشد";
+   <div class="actions">
+    <button class="edit" onclick="editExpense('${x.id}')">ویرایش</button>
+    <button class="danger" onclick="removeRow('expenses','${x.id}')">حذف</button>
+   </div>
+  </div>
+ `).join(""):"هزینه‌ای پیدا نشد";
 }
 
 function render(){
@@ -361,15 +555,84 @@ function render(){
 }
 
 function tab(id){
- ["dashboard","customers","sales","orders","expenses","reports"].forEach(x=>
-  $(x).classList.toggle("hidden",x!==id)
- );
+ ["dashboard","customers","sales","orders","expenses","reports"]
+ .forEach(x=>$(x).classList.toggle("hidden",x!==id));
 }
 
-function esc(s){
- return String(s??"").replace(/[&<>"']/g,c=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
- }[c]));
+function exportExcel(){
+ if(!window.XLSX)return alert("کتابخانه اکسل بارگذاری نشده؛ اینترنت را بررسی کن.");
+
+ const wb=XLSX.utils.book_new();
+
+ const customerRows=customers.map(x=>({
+  "نام مشتری":x.name,
+  "شماره تماس":x.phone||"",
+  "تاریخ ثبت":x.created_at||""
+ }));
+
+ const saleRows=sales.map(x=>({
+  "نام مشتری":x.customer_name,
+  "مبلغ فروش":Number(x.amount||0),
+  "تاریخ ثبت":x.created_at||""
+ }));
+
+ const orderRows=orders.map(x=>({
+  "نام مشتری":x.customer_name,
+  "مبلغ سفارش":Number(x.amount||0),
+  "وضعیت":x.status||"در انتظار",
+  "تاریخ ثبت":x.created_at||""
+ }));
+
+ const expenseRows=expenses.map(x=>({
+  "عنوان هزینه":x.title,
+  "مبلغ":Number(x.amount||0),
+  "تاریخ ثبت":x.created_at||""
+ }));
+
+ const reportRows=[
+  {"عنوان":"مجموع فروش","مبلغ":sales.reduce((a,x)=>a+Number(x.amount||0),0)},
+  {"عنوان":"مجموع هزینه","مبلغ":expenses.reduce((a,x)=>a+Number(x.amount||0),0)},
+  {"عنوان":"سود خالص","مبلغ":sales.reduce((a,x)=>a+Number(x.amount||0),0)-expenses.reduce((a,x)=>a+Number(x.amount||0),0)},
+  {"عنوان":"تعداد مشتریان","مبلغ":customers.length},
+  {"عنوان":"تعداد سفارش‌ها","مبلغ":orders.length}
+ ];
+
+ function addSheet(rows,name){
+  const ws=XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,ws,name);
+ }
+
+ addSheet(customerRows,"مشتریان");
+ addSheet(saleRows,"فروش");
+ addSheet(orderRows,"سفارش‌ها");
+ addSheet(expenseRows,"هزینه‌ها");
+ addSheet(reportRows,"گزارش مالی");
+
+ XLSX.writeFile(wb,"Moshtariyar-Report.xlsx");
+}
+
+function exportBackup(){
+ const backup={
+  app:"Moshtariyar",
+  version:1,
+  exported_at:new Date().toISOString(),
+  customers,
+  sales,
+  orders,
+  expenses
+ };
+
+ const blob=new Blob(
+  [JSON.stringify(backup,null,2)],
+  {type:"application/json;charset=utf-8"}
+ );
+
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="Moshtariyar-Backup.json";
+ a.click();
+ URL.revokeObjectURL(url);
 }
 
 db.auth.onAuthStateChange((event,session)=>{
@@ -384,7 +647,10 @@ db.auth.onAuthStateChange((event,session)=>{
 });
 
 db.auth.getSession().then(({data,error})=>{
- if(error){msg("خطا در بررسی ورود: "+error.message);return}
+ if(error){
+  msg("خطا در بررسی حساب: "+error.message);
+  return;
+ }
  if(data.session?.user){
   user=data.session.user;
   showApp();
