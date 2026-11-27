@@ -10,19 +10,22 @@
 *{box-sizing:border-box}
 body{margin:0;background:#f1f5f9;color:#1e293b;font-family:Tahoma,Arial}
 header{background:#172554;color:white;text-align:center;padding:22px}
-main{max-width:850px;margin:20px auto;padding:14px}
+main{max-width:950px;margin:20px auto;padding:14px}
 .card{background:white;border-radius:14px;padding:17px;margin-bottom:15px;box-shadow:0 2px 10px #0001}
-input,button{width:100%;padding:13px;margin:6px 0;border:1px solid #dbe2ea;border-radius:9px;font-size:15px}
+input,select,button{width:100%;padding:13px;margin:6px 0;border:1px solid #dbe2ea;border-radius:9px;font-size:15px}
 button{background:#2563eb;color:white;border:0;cursor:pointer}
 .danger{background:#dc2626}
 .edit{background:#0f766e}
 nav{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
 nav button{flex:1;min-width:95px}
 .item{padding:12px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.actions{display:flex;gap:5px}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
 .actions button{width:auto;padding:8px 11px}
 .hidden{display:none}
 .small{font-size:12px;color:#64748b}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:#eff6ff;border-radius:10px;padding:14px;text-align:center}
+.stat b{display:block;margin-top:8px}
 </style>
 </head>
 <body>
@@ -48,6 +51,7 @@ nav button{flex:1;min-width:95px}
 </div>
 
 <nav>
+<button onclick="tab('dashboard')">داشبورد</button>
 <button onclick="tab('customers')">مشتریان</button>
 <button onclick="tab('sales')">فروش</button>
 <button onclick="tab('orders')">سفارش‌ها</button>
@@ -55,38 +59,65 @@ nav button{flex:1;min-width:95px}
 <button onclick="tab('reports')">گزارش‌ها</button>
 </nav>
 
-<div id="customers" class="card">
+<div id="dashboard" class="card">
+<h3>داشبورد مشتریار</h3>
+<div class="stats">
+<div class="stat">تعداد مشتریان<b id="dashCustomers">۰</b></div>
+<div class="stat">تعداد سفارش‌ها<b id="dashOrders">۰</b></div>
+<div class="stat">مجموع فروش<b id="dashSales">۰</b></div>
+<div class="stat">مجموع هزینه<b id="dashExpenses">۰</b></div>
+<div class="stat">سود خالص<b id="dashProfit">۰</b></div>
+</div>
+</div>
+
+<div id="customers" class="card hidden">
 <h3>مدیریت مشتریان</h3>
 <input id="cname" placeholder="نام مشتری">
 <input id="cphone" placeholder="شماره تماس">
 <button onclick="addCustomer()">ثبت مشتری</button>
 <hr>
 <h3>جست‌وجوی مشتری</h3>
-<input id="searchCustomer" placeholder="نام یا شماره تماس را وارد کن" oninput="renderCustomers()">
+<input id="searchCustomer" placeholder="نام یا شماره تماس" oninput="renderCustomers()">
 <div id="customerList"></div>
 </div>
 
 <div id="sales" class="card hidden">
 <h3>ثبت فروش</h3>
 <input id="sname" placeholder="نام مشتری">
-<input id="samount" type="number" placeholder="مبلغ فروش به تومان">
+<input id="samount" type="number" min="1" placeholder="مبلغ فروش به تومان">
 <button onclick="addSale()">ثبت فروش</button>
+<hr>
+<h3>جست‌وجوی فروش</h3>
+<input id="searchSale" placeholder="نام مشتری یا مبلغ" oninput="renderSales()">
 <div id="salesList"></div>
 </div>
 
 <div id="orders" class="card hidden">
 <h3>ثبت سفارش</h3>
 <input id="oname" placeholder="نام مشتری">
-<input id="oamount" type="number" placeholder="مبلغ سفارش به تومان">
+<input id="oamount" type="number" min="1" placeholder="مبلغ سفارش به تومان">
 <button onclick="addOrder()">ثبت سفارش</button>
+<hr>
+<h3>جست‌وجوی سفارش‌ها</h3>
+<input id="searchOrder" placeholder="نام مشتری یا مبلغ سفارش" oninput="renderOrders()">
+<select id="orderStatusFilter" onchange="renderOrders()">
+<option value="">همه وضعیت‌ها</option>
+<option value="در انتظار">در انتظار</option>
+<option value="در حال انجام">در حال انجام</option>
+<option value="تکمیل شده">تکمیل شده</option>
+<option value="لغو شده">لغو شده</option>
+</select>
 <div id="orderList"></div>
 </div>
 
 <div id="expenses" class="card hidden">
 <h3>ثبت هزینه</h3>
 <input id="etitle" placeholder="عنوان هزینه">
-<input id="eamount" type="number" placeholder="مبلغ هزینه به تومان">
+<input id="eamount" type="number" min="1" placeholder="مبلغ هزینه به تومان">
 <button onclick="addExpense()">ثبت هزینه</button>
+<hr>
+<h3>جست‌وجوی هزینه</h3>
+<input id="searchExpense" placeholder="عنوان هزینه" oninput="renderExpenses()">
 <div id="expenseList"></div>
 </div>
 
@@ -98,7 +129,6 @@ nav button{flex:1;min-width:95px}
 <p>تعداد مشتریان: <b id="totalCustomers">۰</b></p>
 <p>تعداد سفارش‌ها: <b id="totalOrders">۰</b></p>
 </div>
-
 </section>
 </main>
 
@@ -109,8 +139,10 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 let user=null;
 let customers=[],sales=[],orders=[],expenses=[];
+let loading=false;
 const $=id=>document.getElementById(id);
 const money=n=>Number(n||0).toLocaleString("fa-IR")+" تومان";
+const number=n=>Number(n||0).toLocaleString("fa-IR");
 const msg=t=>$("authMsg").textContent=t;
 
 async function signUp(){
@@ -118,17 +150,19 @@ async function signUp(){
  const password=$("password").value;
  if(!email||password.length<6)return msg("ایمیل و رمز حداقل ۶ کاراکتری وارد کن");
  const {data,error}=await db.auth.signUp({email,password});
- if(error)return msg(error.message);
- if(data.session){user=data.user;await showApp()}
- else msg("ثبت‌نام انجام شد؛ ایمیلت را برای تأیید بررسی کن.");
+ if(error)return msg("خطا: "+error.message);
+ if(data.session){
+  user=data.user;
+  await showApp();
+ }else msg("ثبت‌نام انجام شد؛ ایمیلت را برای تأیید بررسی کن.");
 }
 
 async function signIn(){
- const {data,error}=await db.auth.signInWithPassword({
-  email:$("email").value.trim(),
-  password:$("password").value
- });
- if(error)return msg(error.message);
+ const email=$("email").value.trim();
+ const password=$("password").value;
+ if(!email||!password)return msg("ایمیل و رمز عبور را وارد کن");
+ const {data,error}=await db.auth.signInWithPassword({email,password});
+ if(error)return msg("خطا: "+error.message);
  user=data.user;
  await showApp();
 }
@@ -141,27 +175,38 @@ async function signOut(){
 }
 
 async function showApp(){
+ if(loading)return;
+ loading=true;
  $("auth").classList.add("hidden");
  $("app").classList.remove("hidden");
  await loadData();
+ loading=false;
 }
 
 async function loadData(){
  const tables=["customers","sales","orders","expenses"];
  for(const table of tables){
   const {data,error}=await db.from(table).select("*").order("created_at",{ascending:false});
-  if(error){alert("خطا در دریافت اطلاعات: "+error.message);return}
-  if(table==="customers")customers=data;
-  if(table==="sales")sales=data;
-  if(table==="orders")orders=data;
-  if(table==="expenses")expenses=data;
+  if(error){
+   alert("خطا در دریافت اطلاعات "+table+": "+error.message);
+   return false;
+  }
+  if(table==="customers")customers=data||[];
+  if(table==="sales")sales=data||[];
+  if(table==="orders")orders=data||[];
+  if(table==="expenses")expenses=data||[];
  }
  render();
+ return true;
 }
 
 async function addRow(table,row){
+ if(!user)return alert("ابتدا وارد حساب شو");
  const {error}=await db.from(table).insert({...row,owner_id:user.id});
- if(error){alert(error.message);return false}
+ if(error){
+  alert("خطا در ثبت: "+error.message);
+  return false;
+ }
  await loadData();
  return true;
 }
@@ -205,6 +250,12 @@ async function addOrder(){
  if(ok){$("oname").value="";$("oamount").value=""}
 }
 
+async function changeOrderStatus(id,status){
+ const {error}=await db.from("orders").update({status}).eq("id",id);
+ if(error)return alert("خطا در تغییر وضعیت: "+error.message);
+ await loadData();
+}
+
 async function addExpense(){
  const title=$("etitle").value.trim();
  const amount=Number($("eamount").value);
@@ -214,9 +265,9 @@ async function addExpense(){
 }
 
 async function removeRow(table,id){
- if(!confirm("از حذف مطمئنی؟"))return;
+ if(!confirm("از حذف این مورد مطمئنی؟"))return;
  const {error}=await db.from(table).delete().eq("id",id);
- if(error)return alert(error.message);
+ if(error)return alert("خطا در حذف: "+error.message);
  await loadData();
 }
 
@@ -236,38 +287,87 @@ function renderCustomers(){
   </div>`).join(""):"مشتری پیدا نشد";
 }
 
+function renderSales(){
+ const q=$("searchSale").value.trim().toLowerCase();
+ const filtered=sales.filter(x=>
+  (x.customer_name||"").toLowerCase().includes(q)||
+  String(x.amount||"").includes(q)
+ );
+ $("salesList").innerHTML=filtered.length?filtered.map(x=>`
+  <div class="item">
+   <span>${esc(x.customer_name)} - ${money(x.amount)}</span>
+   <button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button>
+  </div>`).join(""):"فروشی پیدا نشد";
+}
+
+function renderOrders(){
+ const q=$("searchOrder").value.trim().toLowerCase();
+ const status=$("orderStatusFilter").value;
+ const filtered=orders.filter(x=>
+  ((x.customer_name||"").toLowerCase().includes(q)||
+  String(x.amount||"").includes(q))&&
+  (!status||(x.status||"در انتظار")===status)
+ );
+ $("orderList").innerHTML=filtered.length?filtered.map(x=>`
+  <div class="item">
+   <div>
+    <b>${esc(x.customer_name)}</b>
+    <div>${money(x.amount)}</div>
+    <div class="small">وضعیت: ${esc(x.status||"در انتظار")}</div>
+   </div>
+   <div class="actions">
+    <select style="width:auto;max-width:150px" onchange="changeOrderStatus('${x.id}',this.value)">
+     <option value="در انتظار" ${(x.status||"در انتظار")==="در انتظار"?"selected":""}>در انتظار</option>
+     <option value="در حال انجام" ${x.status==="در حال انجام"?"selected":""}>در حال انجام</option>
+     <option value="تکمیل شده" ${x.status==="تکمیل شده"?"selected":""}>تکمیل شده</option>
+     <option value="لغو شده" ${x.status==="لغو شده"?"selected":""}>لغو شده</option>
+    </select>
+    <button class="danger" onclick="removeRow('orders','${x.id}')">حذف</button>
+   </div>
+  </div>`).join(""):"سفارشی پیدا نشد";
+}
+
+function renderExpenses(){
+ const q=$("searchExpense").value.trim().toLowerCase();
+ const filtered=expenses.filter(x=>(x.title||"").toLowerCase().includes(q));
+ $("expenseList").innerHTML=filtered.length?filtered.map(x=>`
+  <div class="item">
+   <span>${esc(x.title)} - ${money(x.amount)}</span>
+   <button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button>
+  </div>`).join(""):"هزینه‌ای پیدا نشد";
+}
+
 function render(){
  renderCustomers();
+ renderSales();
+ renderOrders();
+ renderExpenses();
 
- $("salesList").innerHTML=sales.map(x=>`
- <div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)}</span>
- <button class="danger" style="width:auto" onclick="removeRow('sales','${x.id}')">حذف</button></div>`).join("");
+ const s=sales.reduce((a,x)=>a+Number(x.amount||0),0);
+ const e=expenses.reduce((a,x)=>a+Number(x.amount||0),0);
+ const profit=s-e;
 
- $("orderList").innerHTML=orders.map(x=>`
- <div class="item"><span>${esc(x.customer_name)} - ${money(x.amount)} (${esc(x.status)})</span>
- <button class="danger" style="width:auto" onclick="removeRow('orders','${x.id}')">حذف</button></div>`).join("");
-
- $("expenseList").innerHTML=expenses.map(x=>`
- <div class="item"><span>${esc(x.title)} - ${money(x.amount)}</span>
- <button class="danger" style="width:auto" onclick="removeRow('expenses','${x.id}')">حذف</button></div>`).join("");
-
- const s=sales.reduce((a,x)=>a+Number(x.amount),0);
- const e=expenses.reduce((a,x)=>a+Number(x.amount),0);
  $("totalSales").textContent=money(s);
  $("totalExpenses").textContent=money(e);
- $("netProfit").textContent=money(s-e);
- $("totalCustomers").textContent=customers.length.toLocaleString("fa-IR");
- $("totalOrders").textContent=orders.length.toLocaleString("fa-IR");
+ $("netProfit").textContent=money(profit);
+ $("totalCustomers").textContent=number(customers.length);
+ $("totalOrders").textContent=number(orders.length);
+
+ $("dashCustomers").textContent=number(customers.length);
+ $("dashOrders").textContent=number(orders.length);
+ $("dashSales").textContent=money(s);
+ $("dashExpenses").textContent=money(e);
+ $("dashProfit").textContent=money(profit);
 }
 
 function tab(id){
- ["customers","sales","orders","expenses","reports"].forEach(x=>
+ ["dashboard","customers","sales","orders","expenses","reports"].forEach(x=>
   $(x).classList.toggle("hidden",x!==id)
  );
 }
 
 function esc(s){
- return String(s).replace(/[&<>"']/g,c=>({
+ return String(s??"").replace(/[&<>"']/g,c=>({
  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
  }[c]));
 }
@@ -283,7 +383,8 @@ db.auth.onAuthStateChange((event,session)=>{
  }
 });
 
-db.auth.getSession().then(({data})=>{
+db.auth.getSession().then(({data,error})=>{
+ if(error){msg("خطا در بررسی ورود: "+error.message);return}
  if(data.session?.user){
   user=data.session.user;
   showApp();
